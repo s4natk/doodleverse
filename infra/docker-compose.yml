@@ -1,0 +1,17 @@
+# Empty local shells. Neither service classifies a sketch or runs the world.
+services:
+  inference:
+    build:
+      context: ..
+      dockerfile: infra/inference.Dockerfile
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: ../../infra/web.Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
