@@ -1,0 +1,37 @@
+.venv/
+*.egg-info/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor plans stay local.
+.cursor/
+
+# Datasets, experiment stores, and trained weights stay local.
+/data/
+mlruns/
+artifacts/
+*.npy
+*.keras
+*.joblib
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Node / Next
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+*.log

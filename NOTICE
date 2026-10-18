@@ -1,0 +1,9 @@
+Doodleverse will train on the Quick, Draw! dataset by Google Creative Lab.
+
+That dataset is licensed under Creative Commons Attribution 4.0 International
+(CC BY 4.0).
+
+Source: https://github.com/googlecreativelab/quickdraw-dataset
+
+Drawings are not in this repository. Download them with a later script, and
+keep the attribution above if you share models or figures trained on them.
