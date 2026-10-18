@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "doodleverse"
+version = "0.1.0"
+description = "Draw it. Bring it to life."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy==2.5.4",
+    "pillow==13.0.0",
+    "opencv-python-headless==4.14.0.94",
+    "scikit-learn==1.9.1",
+    "matplotlib==3.11.2",
+    "mlflow==3.17.1",
+    "tensorflow==2.21.0",
+    "fastapi==0.146.0",
+    "uvicorn==0.54.0",
+    "pydantic==2.14.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["ml", "services/inference"]
+include = ["doodleverse*", "doodleverse_api*"]
