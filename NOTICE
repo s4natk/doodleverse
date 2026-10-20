@@ -5,5 +5,5 @@ That dataset is licensed under Creative Commons Attribution 4.0 International
 
 Source: https://github.com/googlecreativelab/quickdraw-dataset
 
-Drawings are not in this repository. Download them with a later script, and
-keep the attribution above if you share models or figures trained on them.
+The bitmap files are not part of this repository. Keep the attribution above
+if you share models or figures trained on these drawings.

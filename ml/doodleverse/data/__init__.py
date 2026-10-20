@@ -1,1 +1,1 @@
-"""Dataset download and splits. Not implemented yet."""
+"""Download Quick, Draw! bitmaps and build leak-free splits."""
