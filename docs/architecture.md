@@ -31,10 +31,12 @@ The browser will send strokes: lists of points, plus the canvas size. It will no
 
 The reply will be a class name from a fixed list, not a sprite and not a behavior.
 
+Quick, Draw! bitmaps used for training are already 28×28 and centered. `normalize_quickdraw_bitmap` only rescales those rows into `[0, 1]`. A stroke drawn in the app is not that file. Mapping a live stroke into the same picture is separate work, documented in `docs/experiments.md`.
+
 ## Label order
 
 `ml/doodleverse/classes.py` lists sun, cloud, tree, flower, car, cat. That order is part of the model, the same way a weight is. Index 0 is the first output unit. The API, the training script, and this file have to agree, or a correct weight vector will be given the wrong name.
 
-## What this page is not
+## What is still ahead
 
-There is no trained network, no preprocessing code, and no world loop in the repo yet. Docker Compose only starts the two empty shells.
+No network has been trained, and a live stroke is not rasterized yet. Docker Compose starts the two empty shells.

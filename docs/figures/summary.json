@@ -1,0 +1,178 @@
+{
+  "seed": 1729,
+  "probe_rows_per_class": 2048,
+  "mean_pixel": 42.897806595782846,
+  "ink_polarity": "ink_high",
+  "classes": [
+    {
+      "label": "sun",
+      "rows": 133781,
+      "mean_pixel": 39.4756637884646,
+      "fraction_nonzero": 0.2759766870615434,
+      "border_ink_fraction": 0.028731126051682692,
+      "center_ink_fraction": 0.5382877272002551
+    },
+    {
+      "label": "cloud",
+      "rows": 120265,
+      "mean_pixel": 35.019979048748404,
+      "fraction_nonzero": 0.24122713050063777,
+      "border_ink_fraction": 0.04419414813701923,
+      "center_ink_fraction": 0.39405044244260207
+    },
+    {
+      "label": "tree",
+      "rows": 144721,
+      "mean_pixel": 44.361435870735015,
+      "fraction_nonzero": 0.2923951440927934,
+      "border_ink_fraction": 0.044175368088942304,
+      "center_ink_fraction": 0.49425522161989793
+    },
+    {
+      "label": "flower",
+      "rows": 144818,
+      "mean_pixel": 44.8817026566486,
+      "fraction_nonzero": 0.2858126893335459,
+      "border_ink_fraction": 0.03601543719951923,
+      "center_ink_fraction": 0.5884685905612245
+    },
+    {
+      "label": "car",
+      "rows": 182764,
+      "mean_pixel": 42.971400669642854,
+      "fraction_nonzero": 0.2771631357621174,
+      "border_ink_fraction": 0.04569655198317308,
+      "center_ink_fraction": 0.5593286631058674
+    },
+    {
+      "label": "cat",
+      "rows": 123202,
+      "mean_pixel": 50.67665754045759,
+      "fraction_nonzero": 0.33112381915656885,
+      "border_ink_fraction": 0.04180908203125,
+      "center_ink_fraction": 0.6024867466517857
+    }
+  ],
+  "sparsest": [
+    {
+      "label": "sun",
+      "index": 65593,
+      "ink_pixels": 10
+    },
+    {
+      "label": "sun",
+      "index": 49470,
+      "ink_pixels": 12
+    },
+    {
+      "label": "sun",
+      "index": 100825,
+      "ink_pixels": 12
+    },
+    {
+      "label": "sun",
+      "index": 2087,
+      "ink_pixels": 32
+    },
+    {
+      "label": "cloud",
+      "index": 66238,
+      "ink_pixels": 15
+    },
+    {
+      "label": "cloud",
+      "index": 118167,
+      "ink_pixels": 25
+    },
+    {
+      "label": "cloud",
+      "index": 95377,
+      "ink_pixels": 34
+    },
+    {
+      "label": "cloud",
+      "index": 19933,
+      "ink_pixels": 49
+    },
+    {
+      "label": "tree",
+      "index": 11988,
+      "ink_pixels": 18
+    },
+    {
+      "label": "tree",
+      "index": 43665,
+      "ink_pixels": 20
+    },
+    {
+      "label": "tree",
+      "index": 75184,
+      "ink_pixels": 32
+    },
+    {
+      "label": "tree",
+      "index": 18052,
+      "ink_pixels": 48
+    },
+    {
+      "label": "flower",
+      "index": 85927,
+      "ink_pixels": 8
+    },
+    {
+      "label": "flower",
+      "index": 134080,
+      "ink_pixels": 12
+    },
+    {
+      "label": "flower",
+      "index": 71193,
+      "ink_pixels": 16
+    },
+    {
+      "label": "flower",
+      "index": 47364,
+      "ink_pixels": 20
+    },
+    {
+      "label": "car",
+      "index": 119391,
+      "ink_pixels": 8
+    },
+    {
+      "label": "car",
+      "index": 131676,
+      "ink_pixels": 22
+    },
+    {
+      "label": "car",
+      "index": 179685,
+      "ink_pixels": 22
+    },
+    {
+      "label": "car",
+      "index": 136414,
+      "ink_pixels": 24
+    },
+    {
+      "label": "cat",
+      "index": 122385,
+      "ink_pixels": 8
+    },
+    {
+      "label": "cat",
+      "index": 7743,
+      "ink_pixels": 10
+    },
+    {
+      "label": "cat",
+      "index": 71251,
+      "ink_pixels": 13
+    },
+    {
+      "label": "cat",
+      "index": 109562,
+      "ink_pixels": 27
+    }
+  ]
+}
