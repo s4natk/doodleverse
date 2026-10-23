@@ -31,7 +31,7 @@ The browser will send strokes: lists of points, plus the canvas size. It will no
 
 The reply will be a class name from a fixed list, not a sprite and not a behavior.
 
-Quick, Draw! bitmaps used for training are already 28×28 and centered. `normalize_quickdraw_bitmap` only rescales those rows into `[0, 1]`. A stroke drawn in the app is not that file. Mapping a live stroke into the same picture is separate work, documented in `docs/experiments.md`.
+Quick, Draw! bitmaps used for training are already 28×28 and centered. `normalize_quickdraw_bitmap` only rescales those rows into `[0, 1]`. `strokes_to_model_input` frames a live stroke into that same numeric picture. The two paths share size, polarity, and scale. They do not share a rasterizer. The difference is written in `docs/experiments.md`.
 
 ## Label order
 
@@ -39,4 +39,4 @@ Quick, Draw! bitmaps used for training are already 28×28 and centered. `normali
 
 ## What is still ahead
 
-No network has been trained, and a live stroke is not rasterized yet. Docker Compose starts the two empty shells.
+No network has been trained. The API does not serve a sketch yet. Docker Compose starts the two empty shells.

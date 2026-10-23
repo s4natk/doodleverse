@@ -39,3 +39,11 @@ Those sparse rows are still labeled. A later model will treat a nearly blank cat
 Training will call `normalize_quickdraw_bitmap`. A row is reshaped to 28×28, divided by 255 when values still sit on the 0–255 scale, and left uninverted because the measured polarity is `ink_high`. The result is float32 in [0, 1]. The same stored bitmap always produces the same tensor.
 
 This function does not redraw a stroke. A person drawing in the app produces points on a canvas of some width and height. Those points have not been centered in a 28×28 frame and have not been given Google's stroke thickness. If that live drawing is not mapped into this same numeric picture, the network is asked to recognize a kind of image it did not train on. That gap is train/serve skew, and it starts with the difference between these files and a raw canvas.
+
+## Stroke rasterizer
+
+`strokes_to_model_input` is the live-drawing path. It frames the ink with one scale and a translation, draws it with OpenCV at a fixed thickness, area-resizes to 28×28, and then calls `normalize_quickdraw_bitmap` with `ink_high`.
+
+Identical to the bitmap path: spatial size, polarity, the divide-by-255 step, and dtype `float32` in [0, 1]. The model tensor rank is `(1, 28, 28, 1)`.
+
+Not identical: Quick, Draw! bitmaps were rendered by Google. This rasterizer did not produce them. Stroke width and `INTER_AREA` decide how much gray a thin line becomes after the shrink, which moves the pixels as much as a change in the network would.

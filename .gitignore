@@ -14,6 +14,7 @@ __pycache__/
 mlruns/
 artifacts/
 *.npy
+!ml/tests/fixtures/golden_stroke.npy
 *.keras
 *.joblib
 
