@@ -1,8 +1,4 @@
-"""Fetch only the six numpy bitmap files this project uses.
-
-Each file is one class. The array is uint8 with shape (N, 784): N drawings,
-each already scaled by Google into a 28×28 image and stored as one row.
-"""
+"""Quick, Draw! numpy bitmaps. One uint8 file per class, shape (N, 784)."""
 
 from __future__ import annotations
 

@@ -1,13 +1,7 @@
-"""Look at the six bitmap files before any model is trained.
-
-The figures and docs/experiments.md are written from measurements. Polarity
-is decided from the mean pixel in the files, not from a description of the
-dataset.
-"""
+"""Measure the bitmap files and write docs/experiments.md from those numbers."""
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import matplotlib
@@ -173,13 +167,11 @@ def _experiments_markdown(report: dict, odd: list[dict]) -> str:
         "",
         "## What a Quick, Draw! bitmap already is",
         "",
-        "Each category file stores drawings as `uint8` rows of length 784. Reshaped, a row is a 28×28 image. "
-        "Google already scaled the sketch into that square and centered the ink. The file is not a record of "
-        "where the pen moved on a canvas, and it is not the same object as a stroke list typed into the app.",
+        "Each file is `uint8` rows of length 784, one 28×28 drawing per row. "
+        "The ink is already scaled into that square and centered. "
+        "A stroke list from the app is not one of these rows.",
         "",
-        "The probe below is evidence from these files, not a second copy of Google's write-up. "
-        "Ink is denser in the middle 14×14 pixels than in the outer two-pixel border, which is what a "
-        "centered drawing looks like after it has been fit into the frame.",
+        "In the probe, ink is denser in the middle 14×14 than on the outer two-pixel border.",
         "",
         "## Polarity",
         "",
@@ -190,10 +182,8 @@ def _experiments_markdown(report: dict, odd: list[dict]) -> str:
         if polarity == "ink_high"
         else f"That mean is at or above mid-gray, so the decision is `{polarity}`.",
         "",
-        "`ink_high` means the background is stored as 0 and the stroke is stored brighter. "
-        "The training normalizer divides by 255 and does not invert. "
-        "`ink_low` would divide by 255 and invert once. The rule is the mean compared with 127. "
-        "A softmax model trained on one direction will misread a drawing stored the other way.",
+        "Under 127, paper is stored as 0 and strokes are brighter (`ink_high`): divide by 255, do not invert. "
+        "At or above 127, invert once after scaling (`ink_low`).",
         "",
         "| class | drawings in file | mean pixel | fraction nonzero | border ink | center ink |",
         "| --- | --- | --- | --- | --- | --- |",
@@ -216,20 +206,23 @@ def _experiments_markdown(report: dict, odd: list[dict]) -> str:
             "- [Sparsest drawings](figures/odd_samples.png). The emptiest row in each class has "
             f"{sparsest}.",
             "",
-            "Those sparse rows are still labeled. A later model will treat a nearly blank cat and a "
-            "finished cat as the same class. That is a property of the dataset, visible here before training.",
+            "Those sparse rows are still labeled with the class.",
             "",
             "## Normalizer",
             "",
-            "Training will call `normalize_quickdraw_bitmap`. A row is reshaped to 28×28, divided by 255 "
-            f"when values still sit on the 0–255 scale, and left uninverted because the measured polarity is `{polarity}`. "
-            "The result is float32 in [0, 1]. The same stored bitmap always produces the same tensor.",
+            "`normalize_quickdraw_bitmap` reshapes a row to 28×28 and divides by 255 when values are still "
+            f"on the 0–255 scale. Measured polarity is `{polarity}`, so it does not invert. "
+            "Output is float32 in [0, 1]. The same bitmap always gives the same tensor.",
             "",
-            "This function does not redraw a stroke. A person drawing in the app produces points on a canvas "
-            "of some width and height. Those points have not been centered in a 28×28 frame and have not been "
-            "given Google's stroke thickness. If that live drawing is not mapped into this same numeric picture, "
-            "the network is asked to recognize a kind of image it did not train on. That gap is train/serve skew, "
-            "and it starts with the difference between these files and a raw canvas.",
+            "## Stroke rasterizer",
+            "",
+            "`strokes_to_model_input` frames a live stroke with one scale, pads, centers, draws at a fixed "
+            f"thickness, area-resizes to 28×28, then calls the bitmap normalizer with `{polarity}`.",
+            "",
+            "Same as the bitmap path: 28×28, polarity, divide by 255, float32 in [0, 1], rank `(1, 28, 28, 1)`.",
+            "",
+            "Not the same: these dataset files were rendered by Google. Stroke width and INTER_AREA are ours. "
+            "Changing either moves the 28×28 pixels.",
             "",
         ]
     )
@@ -249,8 +242,6 @@ def explore(raw_dir: Path, figure_dir: Path, experiments_path: Path, seed: int =
     write_odd_samples(odd, figure_dir / "odd_samples.png")
     experiments_path.parent.mkdir(parents=True, exist_ok=True)
     experiments_path.write_text(_experiments_markdown(report, odd), encoding="utf-8")
-    summary = {key: value for key, value in report.items() if key != "histogram"}
-    (figure_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return report
 
 

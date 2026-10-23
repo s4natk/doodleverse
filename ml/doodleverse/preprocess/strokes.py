@@ -1,23 +1,7 @@
-"""Frame one grouped sketch into the tensor the classifier will consume.
+"""Rasterize one sketch to float32 (1, 28, 28, 1), ink high.
 
-OpenCV does the drawing and the resize. Pillow is not used on this path, so
-thickness and the downsample kernel cannot drift apart.
-
-The framing map is affine. The ink's bounding box is expanded into a square
-by the longer side, then padded by a fixed fraction and centered:
-
-    scale = (raster_size - 1) / (max(width, height) * (1 + 2 * pad))
-    px = (x - offset_x) * scale
-    py = (y - offset_y) * scale
-
-Both axes share one scale, so aspect ratio is preserved. The translation
-centers the drawing. A different stroke width, or a different resize kernel
-than INTER_AREA, changes the 28×28 ink by as much as a different set of
-network weights would.
-
-What matches the bitmap normalizer: 28×28, ink_high, divide by 255, float32
-in [0, 1]. What cannot match: Quick, Draw! bitmaps were rendered by Google.
-This function did not produce them.
+One scale for both axes, then pad and center. Thickness is fixed before
+INTER_AREA down to 28. Google's bitmaps did not come from this function.
 """
 
 from __future__ import annotations

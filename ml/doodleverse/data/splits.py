@@ -1,9 +1,4 @@
-"""Deterministic, class-balanced splits with no shared drawing indices.
-
-Each class is sampled on its own, so a rare class is not drowned out by a
-common one. The sample is drawn without replacement, then cut into train,
-validation, and test. A drawing index can land in only one of those three.
-"""
+"""Class-balanced 70/15/15 splits. Each drawing index is used once."""
 
 from __future__ import annotations
 
@@ -26,11 +21,7 @@ def make_manifest(
     seed: int = SEED,
     samples_per_class: int = SAMPLES_PER_CLASS,
 ) -> dict:
-    """Sample the same number of rows from every class, then cut 70/15/15.
-
-    The generator is seeded and labels are visited in a fixed order, so the
-    same counts and seed always produce the same indices.
-    """
+    """Same seed and class counts always return the same indices."""
 
     missing = [label for label in LABELS if label not in class_counts]
     if missing:

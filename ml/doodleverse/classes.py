@@ -1,9 +1,4 @@
-"""Fixed order of the six sketch classes.
-
-Index 0 is the first output unit of the classifier later days will train.
-Reordering this tuple after that training would rename every prediction
-without changing a weight.
-"""
+"""Softmax label order. Don't reorder this after training."""
 
 from __future__ import annotations
 

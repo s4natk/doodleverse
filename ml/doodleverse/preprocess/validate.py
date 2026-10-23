@@ -1,4 +1,4 @@
-"""Reject sketches that are not a bounded list of finite points."""
+"""Bounds checks for a sketch payload."""
 
 from __future__ import annotations
 

@@ -1,4 +1,3 @@
-# Empty local shells. Neither service classifies a sketch or runs the world.
 services:
   inference:
     build:

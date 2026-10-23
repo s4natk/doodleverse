@@ -1,5 +1,3 @@
-"""Download the six bitmap files and write the split manifest."""
-
 from __future__ import annotations
 
 import argparse

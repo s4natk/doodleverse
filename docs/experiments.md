@@ -4,9 +4,9 @@ Numbers in this file come from `python -m doodleverse.data.explore` on the local
 
 ## What a Quick, Draw! bitmap already is
 
-Each category file stores drawings as `uint8` rows of length 784. Reshaped, a row is a 28×28 image. Google already scaled the sketch into that square and centered the ink. The file is not a record of where the pen moved on a canvas, and it is not the same object as a stroke list typed into the app.
+Each file is `uint8` rows of length 784, one 28×28 drawing per row. The ink is already scaled into that square and centered. A stroke list from the app is not one of these rows.
 
-The probe below is evidence from these files, not a second copy of Google's write-up. Ink is denser in the middle 14×14 pixels than in the outer two-pixel border, which is what a centered drawing looks like after it has been fit into the frame.
+In the probe, ink is denser in the middle 14×14 than on the outer two-pixel border.
 
 ## Polarity
 
@@ -14,7 +14,7 @@ Mean stored pixel across 2048 drawings per class: 42.90 on a 0–255 scale. Seed
 
 That mean is below mid-gray, so the decision is `ink_high`.
 
-`ink_high` means the background is stored as 0 and the stroke is stored brighter. The training normalizer divides by 255 and does not invert. `ink_low` would divide by 255 and invert once. The rule is the mean compared with 127. A softmax model trained on one direction will misread a drawing stored the other way.
+Under 127, paper is stored as 0 and strokes are brighter (`ink_high`): divide by 255, do not invert. At or above 127, invert once after scaling (`ink_low`).
 
 | class | drawings in file | mean pixel | fraction nonzero | border ink | center ink |
 | --- | --- | --- | --- | --- | --- |
@@ -32,18 +32,16 @@ That mean is below mid-gray, so the decision is `ink_high`.
 - [Pixel-value histogram](figures/pixel_histogram.png) of the same probe
 - [Sparsest drawings](figures/odd_samples.png). The emptiest row in each class has sun 10 px, cloud 15 px, tree 18 px, flower 8 px, car 8 px, cat 8 px.
 
-Those sparse rows are still labeled. A later model will treat a nearly blank cat and a finished cat as the same class. That is a property of the dataset, visible here before training.
+Those sparse rows are still labeled with the class.
 
 ## Normalizer
 
-Training will call `normalize_quickdraw_bitmap`. A row is reshaped to 28×28, divided by 255 when values still sit on the 0–255 scale, and left uninverted because the measured polarity is `ink_high`. The result is float32 in [0, 1]. The same stored bitmap always produces the same tensor.
-
-This function does not redraw a stroke. A person drawing in the app produces points on a canvas of some width and height. Those points have not been centered in a 28×28 frame and have not been given Google's stroke thickness. If that live drawing is not mapped into this same numeric picture, the network is asked to recognize a kind of image it did not train on. That gap is train/serve skew, and it starts with the difference between these files and a raw canvas.
+`normalize_quickdraw_bitmap` reshapes a row to 28×28 and divides by 255 when values are still on the 0–255 scale. Measured polarity is `ink_high`, so it does not invert. Output is float32 in [0, 1]. The same bitmap always gives the same tensor.
 
 ## Stroke rasterizer
 
-`strokes_to_model_input` is the live-drawing path. It frames the ink with one scale and a translation, draws it with OpenCV at a fixed thickness, area-resizes to 28×28, and then calls `normalize_quickdraw_bitmap` with `ink_high`.
+`strokes_to_model_input` frames a live stroke with one scale, pads, centers, draws at a fixed thickness, area-resizes to 28×28, then calls the bitmap normalizer with `ink_high`.
 
-Identical to the bitmap path: spatial size, polarity, the divide-by-255 step, and dtype `float32` in [0, 1]. The model tensor rank is `(1, 28, 28, 1)`.
+Same as the bitmap path: 28×28, polarity, divide by 255, float32 in [0, 1], rank `(1, 28, 28, 1)`.
 
-Not identical: Quick, Draw! bitmaps were rendered by Google. This rasterizer did not produce them. Stroke width and `INTER_AREA` decide how much gray a thin line becomes after the shrink, which moves the pixels as much as a change in the network would.
+Not the same: these dataset files were rendered by Google. Stroke width and INTER_AREA are ours. Changing either moves the 28×28 pixels.
