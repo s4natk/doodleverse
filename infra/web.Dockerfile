@@ -3,7 +3,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_ values are inlined into the client bundle by `next build`.
+ARG NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 FROM node:24-alpine
