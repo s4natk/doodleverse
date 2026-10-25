@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
 
-from doodleverse.preprocess.bitmap import decide_polarity, normalize_quickdraw_bitmap
+from doodleverse.preprocess.bitmap import (
+    decide_polarity,
+    normalize_quickdraw_batch,
+    normalize_quickdraw_bitmap,
+)
 
 
 def test_same_bitmap_always_yields_the_same_tensor():
@@ -27,6 +31,12 @@ def test_known_pixels_scale_into_the_unit_interval():
     assert scaled[1, 1] == 0
 
 
+def test_faint_uint8_bitmap_is_still_scaled():
+    faint = np.zeros((28, 28), dtype=np.uint8)
+    faint[5, 5] = 1
+    assert normalize_quickdraw_bitmap(faint, "ink_high")[5, 5] == pytest.approx(1 / 255)
+
+
 def test_ink_low_inverts_once():
     paper = np.full((28, 28), 255, dtype=np.uint8)
     assert normalize_quickdraw_bitmap(paper, "ink_low")[0, 0] == pytest.approx(0.0)
@@ -38,3 +48,11 @@ def test_already_scaled_values_are_not_divided_again():
     scaled = np.full((28, 28), 0.5, dtype=np.float32)
     again = normalize_quickdraw_bitmap(scaled, "ink_high")
     np.testing.assert_array_equal(again, scaled)
+
+
+def test_batch_matches_one_image_at_a_time():
+    rows = np.random.default_rng(3).integers(0, 256, size=(5, 784), dtype=np.uint8)
+    batch = normalize_quickdraw_batch(rows, "ink_high")
+    assert batch.shape == (5, 28, 28)
+    for index in range(5):
+        np.testing.assert_array_equal(batch[index], normalize_quickdraw_bitmap(rows[index], "ink_high"))

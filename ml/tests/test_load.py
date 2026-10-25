@@ -17,7 +17,7 @@ def _write_bitmaps(directory, rows: int = 30) -> None:
 def test_train_load_matches_the_bitmap_normalizer_and_skips_test_rows(tmp_path):
     _write_bitmaps(tmp_path)
     manifest = make_manifest({label: 30 for label in LABELS}, seed=4, samples_per_class=20)
-    images, targets = load_split(manifest, "train", tmp_path, polarity="ink_high", allow_test=False)
+    images, targets = load_split(manifest, "train", tmp_path, polarity="ink_high")
     assert images.shape == (84, 28, 28)
     assert images.dtype == np.float32
     assert targets.dtype == np.int64
@@ -30,11 +30,13 @@ def test_train_load_matches_the_bitmap_normalizer_and_skips_test_rows(tmp_path):
     assert test_sun.isdisjoint(train_sun)
     expected = normalize_quickdraw_bitmap(stored[train_sun[0]], "ink_high")
     first_sun = images[targets == 0][0]
-    np.testing.assert_allclose(first_sun, expected, atol=1e-6)
+    np.testing.assert_array_equal(first_sun, expected)
 
 
-def test_training_loader_refuses_the_test_split(tmp_path):
+def test_test_split_is_refused_unless_allowed(tmp_path):
     _write_bitmaps(tmp_path, rows=20)
     manifest = make_manifest({label: 20 for label in LABELS}, seed=1, samples_per_class=10)
     with pytest.raises(RuntimeError, match="test split"):
-        load_split(manifest, "test", tmp_path, allow_test=False)
+        load_split(manifest, "test", tmp_path)
+    images, _ = load_split(manifest, "test", tmp_path, allow_test=True)
+    assert len(images) == 12
