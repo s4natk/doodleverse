@@ -20,12 +20,26 @@ def test_empty_sketch_is_blank():
     assert image.sum() == 0
 
 
+def _ink_centroid(image: np.ndarray) -> tuple[float, float]:
+    rows, cols = np.indices(image.shape)
+    total = float(image.sum())
+    return float((rows * image).sum() / total), float((cols * image).sum() / total)
+
+
 def test_single_point_and_tiny_drawing_leave_ink():
     point = strokes_to_raster([[(40, 40)]], 100, 100)
     tiny = strokes_to_raster([[(10, 10), (10.01, 10.02)]], 100, 100)
     assert point.sum() > 0
     assert tiny.sum() > 0
     assert point.max() <= 1
+
+
+def test_single_point_lands_in_the_middle_of_the_frame():
+    for point in [(40, 40), (3, 900), (-250, 12.5)]:
+        image = strokes_to_raster([[point]], 1000, 1000)
+        row, col = _ink_centroid(image)
+        assert abs(row - 13.5) < 1.0
+        assert abs(col - 13.5) < 1.0
 
 
 def test_disconnected_strokes_occupy_opposite_corners():

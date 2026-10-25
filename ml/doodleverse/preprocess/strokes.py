@@ -23,12 +23,12 @@ def _frame(points: list[tuple[float, float]]) -> tuple[float, float, float]:
     ys = [point[1] for point in points]
     min_x, max_x = min(xs), max(xs)
     min_y, max_y = min(ys), max(ys)
-    content_w = max(max_x - min_x, 1e-3)
-    content_h = max(max_y - min_y, 1e-3)
-    side = max(content_w, content_h)
+    # The floor keeps a single dot from dividing by zero. Centering on the
+    # true midpoint keeps that dot in the middle instead of the top-left.
+    side = max(max_x - min_x, max_y - min_y, 1e-3)
     padded = side * (1 + 2 * PAD_FRACTION)
-    offset_x = min_x - (padded - content_w) / 2
-    offset_y = min_y - (padded - content_h) / 2
+    offset_x = (min_x + max_x) / 2 - padded / 2
+    offset_y = (min_y + max_y) / 2 - padded / 2
     return offset_x, offset_y, padded
 
 
