@@ -13,6 +13,7 @@ import numpy as np
 from doodleverse.classes import LABELS
 from doodleverse.data.download import bitmap_path, bitmap_row_count
 from doodleverse.preprocess.bitmap import decide_polarity
+from doodleverse.report import join_sections, split_sections
 
 PROBE_ROWS = 2048
 CHUNK = 8192
@@ -83,8 +84,8 @@ def _sparsest(raw_dir: Path, per_class: int = 4) -> list[dict]:
         path = bitmap_path(raw_dir, label)
         counts = _ink_counts(path)
         order = np.argsort(counts, kind="stable")
+        stored = np.load(path, mmap_mode="r")
         for index in order[:per_class].tolist():
-            stored = np.load(path, mmap_mode="r")
             found.append(
                 {
                     "label": label,
@@ -163,7 +164,9 @@ def _experiments_markdown(report: dict, odd: list[dict]) -> str:
     lines = [
         "# Experiments",
         "",
-        "Numbers in this file come from `python -m doodleverse.data.explore` on the local bitmap files.",
+        "Every number here is written by a script from a local run: the data sections by "
+        "`doodleverse.data.explore`, the models by `doodleverse.training.compare`, and the training fixes by "
+        "`doodleverse.training.ablate_cnn`.",
         "",
         "## What a Quick, Draw! bitmap already is",
         "",
@@ -241,7 +244,13 @@ def explore(raw_dir: Path, figure_dir: Path, experiments_path: Path, seed: int =
     write_histogram(report, figure_dir / "pixel_histogram.png")
     write_odd_samples(odd, figure_dir / "odd_samples.png")
     experiments_path.parent.mkdir(parents=True, exist_ok=True)
-    experiments_path.write_text(_experiments_markdown(report, odd), encoding="utf-8")
+    preamble, own = split_sections(_experiments_markdown(report, odd))
+    owned = {name for name, _ in own}
+    blocks = [block for _, block in own]
+    if experiments_path.exists():
+        _, existing = split_sections(experiments_path.read_text(encoding="utf-8"))
+        blocks += [block for name, block in existing if name not in owned]
+    experiments_path.write_text(join_sections(preamble, blocks), encoding="utf-8")
     return report
 
 
