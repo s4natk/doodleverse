@@ -1,6 +1,11 @@
 # Experiments
 
-Every number here is written by a script from a local run: the data sections by `doodleverse.data.explore`, the models by `doodleverse.training.compare`, and the training fixes by `doodleverse.training.ablate_cnn`.
+Every number here is written by a script from a local run:
+
+- data sections: `doodleverse.data.explore`
+- models: `doodleverse.training.compare`
+- training fixes: `doodleverse.training.ablate_cnn`
+- errors and the uncertainty gate: `doodleverse.training.analyze`
 
 ## What a Quick, Draw! bitmap already is
 
@@ -110,3 +115,47 @@ Shift interpolation. RandomTranslation moves each training image by a fractional
 | Momentum 0.9, nearest shifts (kept) | 0.337 | 0.089 | 14 of 18 | 0.952 | 0.952 |
 
 Momentum moved validation accuracy by +0.035. Nearest shifts moved it by +0.003 more. One seed on one split cannot separate a change that small from noise, so nearest is kept because it removes a train/inference mismatch, not for its score. Epoch-1 accuracy is a single noisy reading. The largest drop is the steadier measure of how much validation swings.
+
+## Errors
+
+The gap CNN (32/64/128 filters) on validation: 174 mistakes in 3,600 drawings. The median top-1 score is 0.995 when the prediction is right and 0.580 when it is wrong. 89% of the mistakes score under 0.9, against 12% of the correct predictions. The gate below uses that gap.
+
+Ink is the mean pixel of the mistaken drawings divided by that of correctly classified drawings of the same true class.
+
+| true | predicted | count | share of the true class | ink | held back by the gate |
+| --- | --- | --- | --- | --- | --- |
+| tree | flower | 27 | 4.5% | 0.97× | 22 of 27 |
+| cat | sun | 13 | 2.2% | 0.75× | 10 of 13 |
+| flower | cat | 12 | 2.0% | 1.04× | 9 of 12 |
+| car | cat | 12 | 2.0% | 1.12× | 10 of 12 |
+| flower | tree | 11 | 1.8% | 0.92× | 9 of 11 |
+| sun | cat | 9 | 1.5% | 1.36× | 8 of 9 |
+
+Cat is the most common wrong answer: 48 of the 174 mistakes are drawings of another class called cat. Correct cat drawings carry the most ink of the six classes, and the drawings pulled into cat carry 1.17× the ink of correct drawings of their own class.
+
+tree → flower. Nearly all are lollipop trees: one round or scalloped canopy on a bare trunk, which is also how a flower head on a stem is drawn. They carry about as much ink as correct trees, so the confusion is shape, not clutter.
+
+cat → sun. Whiskers drawn as short strokes pointing out from a round head look like rays around a disc. These cats carry less ink than correct ones, and the most confident are unfinished: whiskers and two dots with no head.
+
+flower → cat. Scribbled or spiky petals, and drawings that stop at a ground line with one small bump.
+
+car → cat. Side views where the wheels, windows, and body run together at 28×28.
+
+[Mistake gallery](figures/cnn_mistakes.png): the top 4 pairs, the most confident mistakes first.
+
+## Uncertainty gate
+
+A prediction is accepted when its top-1 score and its lead over the second class (the margin) both clear a threshold. Anything else goes back to the person as a top-three choice. Each row is the widest validation coverage whose accepted accuracy reaches the target, searched over a fixed grid.
+
+| target | min score | min margin | coverage | accepted accuracy | mistakes let through |
+| --- | --- | --- | --- | --- | --- |
+| 0.97 | 0.50 | 0.20 | 96.4% | 0.970 | 104 of 174 |
+| 0.98 | 0.60 | 0.40 | 93.6% | 0.980 | 66 of 174 |
+| 0.99 | 0.00 | 0.70 | 88.2% | 0.991 | 30 of 174 |
+| 0.995 | 0.00 | 0.90 | 78.6% | 0.996 | 10 of 174 |
+
+Kept: target 0.99, score at least 0.00 and margin at least 0.70. That accepts 88.2% of validation drawings at 0.991 accuracy and lets 30 of 174 mistakes through. The score floor does not bind: a margin of 0.70 already means a top-1 score of at least 0.70.
+
+The scores are softmax outputs, not calibrated probabilities. No calibration was fit, and a score of 0.9 is not a promise of being right 90% of the time. On validation the mean top-1 score is 0.940 against an accuracy of 0.952, and the expected calibration error over ten bins is 0.017. That agreement is measured on bitmaps like the training ones, not promised for new drawings. The thresholds were also picked on the split they are reported on, so this coverage is optimistic.
+
+[Coverage curve](figures/gate_coverage.png)

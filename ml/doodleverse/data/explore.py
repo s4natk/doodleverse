@@ -164,9 +164,12 @@ def _experiments_markdown(report: dict, odd: list[dict]) -> str:
     lines = [
         "# Experiments",
         "",
-        "Every number here is written by a script from a local run: the data sections by "
-        "`doodleverse.data.explore`, the models by `doodleverse.training.compare`, and the training fixes by "
-        "`doodleverse.training.ablate_cnn`.",
+        "Every number here is written by a script from a local run:",
+        "",
+        "- data sections: `doodleverse.data.explore`",
+        "- models: `doodleverse.training.compare`",
+        "- training fixes: `doodleverse.training.ablate_cnn`",
+        "- errors and the uncertainty gate: `doodleverse.training.analyze`",
         "",
         "## What a Quick, Draw! bitmap already is",
         "",
