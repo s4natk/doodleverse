@@ -8,7 +8,7 @@ from sklearn.metrics import confusion_matrix
 
 from doodleverse.classes import LABELS
 from doodleverse.data.splits import SEED
-from doodleverse.models.cnn import build_cnn, set_training_seed
+from doodleverse.models.cnn import CNN_VARIANTS, build_cnn, set_training_seed
 from doodleverse.tracking import log_run
 from doodleverse.training.metrics import classification_scores
 from doodleverse.training.plots import save_confusion, save_learning_curves
@@ -34,18 +34,25 @@ def run_cnn(
     bn_momentum: float = 0.9,
     interpolation: str = "nearest",
     tracking_uri: Path | None = None,
-    run_name: str = "cnn-gap",
+    run_name: str | None = None,
+    variant: str = "gap",
 ) -> dict:
-    """Fit the gap CNN. Early stopping restores the best validation-loss weights."""
+    """Fit one CNN variant. Early stopping restores the best validation-loss weights."""
 
     import tensorflow as tf
     from tensorflow import keras
 
+    filters = CNN_VARIANTS[variant]
     out_dir.mkdir(parents=True, exist_ok=True)
     set_training_seed(seed)
     x_train = _channels(x_train)
     x_val = _channels(x_val)
-    model = build_cnn(num_classes=len(LABELS), bn_momentum=bn_momentum, interpolation=interpolation)
+    model = build_cnn(
+        num_classes=len(LABELS),
+        bn_momentum=bn_momentum,
+        interpolation=interpolation,
+        filters=filters,
+    )
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=1e-3),
         loss=keras.losses.SparseCategoricalCrossentropy(),
@@ -87,7 +94,8 @@ def run_cnn(
     save_confusion(matrix, list(LABELS), out_dir / "confusion_val.png", "CNN validation")
     report = {
         "model": "tensorflow_cnn",
-        "variant": "gap",
+        "variant": variant,
+        "filters": list(filters),
         "seed": seed,
         "epochs_ran": len(history_dict["loss"]),
         "best_epoch": best_epoch + 1,
@@ -116,9 +124,10 @@ def run_cnn(
         log_run(
             tracking_uri,
             "doodleverse-cnn",
-            run_name,
+            run_name or f"cnn-{variant}",
             {
-                "variant": "gap",
+                "variant": variant,
+                "filters": "/".join(str(width) for width in filters),
                 "seed": seed,
                 "epochs_ran": report["epochs_ran"],
                 "best_epoch": report["best_epoch"],

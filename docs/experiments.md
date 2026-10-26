@@ -5,6 +5,7 @@ Every number here is written by a script from a local run:
 - data sections: `doodleverse.data.explore`
 - models: `doodleverse.training.compare`
 - training fixes: `doodleverse.training.ablate_cnn`
+- narrow CNN and the kept model: `doodleverse.training.select_cnn`
 - errors and the uncertainty gate: `doodleverse.training.analyze`
 
 ## What a Quick, Draw! bitmap already is
@@ -115,6 +116,21 @@ Shift interpolation. RandomTranslation moves each training image by a fractional
 | Momentum 0.9, nearest shifts (kept) | 0.337 | 0.089 | 14 of 18 | 0.952 | 0.952 |
 
 Momentum moved validation accuracy by +0.035. Nearest shifts moved it by +0.003 more. One seed on one split cannot separate a change that small from noise, so nearest is kept because it removes a train/inference mismatch, not for its score. Epoch-1 accuracy is a single noisy reading. The largest drop is the steadier measure of how much validation swings.
+
+## Narrow CNN
+
+The same blocks at half the width (16, 32, 64 filters), trained with the same fixed settings, split, and seed. Rule: keep the higher validation macro-F1; within 0.005, keep the one with the lower warm p50. Latency is 300 single-image CPU forward passes per model after a warmup, the two models taking turns on the same inputs.
+
+| variant | filters | parameters | best epoch | val accuracy | val macro-F1 | warm p50 | warm p95 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| gap | 32/64/128 | 94,118 | 14 of 18 | 0.952 | 0.952 | 5.33 ms | 5.89 ms |
+| narrow | 16/32/64 | 24,022 | 20 of 20 | 0.936 | 0.936 | 5.29 ms | 5.84 ms |
+
+Kept: gap. Its macro-F1 is 0.016 higher, more than the 0.005 tolerance.
+
+Narrow has 3.9× fewer parameters but the same single-image latency within 5% (5.29 against 5.33 ms). At batch size 1 on this CPU, per-call overhead sets the time, not the convolutions.
+
+The narrow run's best epoch was its last (20), so it was still improving when the shared schedule ended. Both models get the same budget here.
 
 ## Errors
 

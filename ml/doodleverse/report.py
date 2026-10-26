@@ -26,20 +26,18 @@ def join_sections(preamble: str, blocks: list[str]) -> str:
     return head + "\n".join(block.rstrip() + "\n" for block in blocks)
 
 
-def upsert_section(path: Path, heading: str, block: str) -> None:
-    """Replace the `## heading` block in place, or append it when it is new."""
+def upsert_section(path: Path, heading: str, block: str, after: str | None = None) -> None:
+    """Replace the `## heading` block in place.
+
+    A new block goes right after the `## after` section when that exists, otherwise at the end.
+    """
 
     text = path.read_text(encoding="utf-8") if path.exists() else ""
     preamble, blocks = split_sections(text)
-    replaced = False
-    updated = []
-    for name, existing in blocks:
-        if name == heading:
-            updated.append(block)
-            replaced = True
-        else:
-            updated.append(existing)
-    if not replaced:
-        updated.append(block)
+    names = [name for name, _ in blocks]
+    updated = [block if name == heading else existing for name, existing in blocks]
+    if heading not in names:
+        position = names.index(after) + 1 if after in names else len(updated)
+        updated.insert(position, block)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(join_sections(preamble, updated), encoding="utf-8")

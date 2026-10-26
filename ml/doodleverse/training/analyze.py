@@ -207,10 +207,12 @@ def run_analysis(
 def main() -> None:
     import argparse
 
+    from doodleverse.training.select_cnn import kept_model_dir
+
     parser = argparse.ArgumentParser(description="Write the validation mistakes and the uncertainty gate.")
     parser.add_argument("--manifest", type=Path, default=Path("ml/splits/v1.json"))
     parser.add_argument("--raw-dir", type=Path, default=Path("data/raw"))
-    parser.add_argument("--model-dir", type=Path, default=Path("artifacts/cnn-gap"))
+    parser.add_argument("--model-dir", type=Path, help="Defaults to the run kept by select_cnn.")
     parser.add_argument("--artifact-dir", type=Path, default=Path("artifacts"))
     parser.add_argument("--experiments", type=Path, default=Path("docs/experiments.md"))
     parser.add_argument("--figure-dir", type=Path, default=Path("docs/figures"))
@@ -219,7 +221,7 @@ def main() -> None:
     result = run_analysis(
         args.manifest,
         args.raw_dir,
-        args.model_dir,
+        args.model_dir or kept_model_dir(args.artifact_dir),
         args.artifact_dir,
         args.experiments,
         args.figure_dir,

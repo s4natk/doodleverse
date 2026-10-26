@@ -7,12 +7,18 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 import tensorflow as tf
 from tensorflow import keras
 
+CNN_VARIANTS: dict[str, tuple[int, ...]] = {
+    "gap": (32, 64, 128),
+    "narrow": (16, 32, 64),
+}
+
 
 def build_cnn(
     num_classes: int = 6,
     dropout: float = 0.3,
     bn_momentum: float = 0.9,
     interpolation: str = "nearest",
+    filters: tuple[int, ...] = CNN_VARIANTS["gap"],
 ) -> keras.Model:
     """28×28 grayscale CNN. Translation noise is applied only while training."""
 
@@ -27,9 +33,9 @@ def build_cnn(
         interpolation=interpolation,
         name="shift",
     )(inputs)
-    for index, filters in enumerate((32, 64, 128)):
+    for index, width in enumerate(filters):
         features = keras.layers.Conv2D(
-            filters,
+            width,
             kernel_size=3,
             padding="same",
             use_bias=False,
@@ -39,7 +45,7 @@ def build_cnn(
         # lag the weights and validation accuracy swings between epochs.
         features = keras.layers.BatchNormalization(momentum=bn_momentum, name=f"bn_{index}")(features)
         features = keras.layers.ReLU(name=f"relu_{index}")(features)
-        if index < 2:
+        if index < len(filters) - 1:
             features = keras.layers.MaxPooling2D(name=f"pool_{index}")(features)
     features = keras.layers.GlobalAveragePooling2D(name="gap")(features)
     features = keras.layers.Dropout(dropout, name="dropout")(features)
