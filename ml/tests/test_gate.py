@@ -1,8 +1,9 @@
 import numpy as np
 import pytest
 
+from doodleverse.gate import accept, top_two
 from doodleverse.training.analyze import errors_section, gate_section
-from doodleverse.training.gate import accept, calibration_error, choose_thresholds, gate_stats, top_two
+from doodleverse.training.gate import calibration_error, choose_thresholds, gate_stats
 
 PROBS = np.array(
     [

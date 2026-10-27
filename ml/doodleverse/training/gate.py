@@ -14,23 +14,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+from doodleverse.gate import accept, top_two
+
 SCORE_GRID = (0.0, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 0.98, 0.99)
 MARGIN_GRID = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.98)
 TARGETS = (0.97, 0.98, 0.99, 0.995)
 DEFAULT_TARGET = 0.99
-
-
-def top_two(probs: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Predicted index, top-1 score, and top-1 minus top-2 for each row."""
-
-    probs = np.asarray(probs, dtype=np.float64)
-    ordered = np.sort(probs, axis=1)
-    return probs.argmax(axis=1), ordered[:, -1], ordered[:, -1] - ordered[:, -2]
-
-
-def accept(probs: np.ndarray, min_score: float, min_margin: float) -> np.ndarray:
-    _, score, margin = top_two(probs)
-    return (score >= min_score) & (margin >= min_margin)
 
 
 def gate_stats(probs: np.ndarray, y_true: np.ndarray, min_score: float, min_margin: float) -> dict:

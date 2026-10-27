@@ -11,6 +11,7 @@ from sklearn.metrics import confusion_matrix
 from doodleverse.classes import LABELS
 from doodleverse.data.load import load_split
 from doodleverse.data.splits import read_manifest
+from doodleverse.gate import accept
 from doodleverse.report import upsert_section
 from doodleverse.training.errors import (
     class_ink,
@@ -25,7 +26,6 @@ from doodleverse.training.errors import (
 from doodleverse.training.gate import (
     DEFAULT_TARGET,
     TARGETS,
-    accept,
     calibration_error,
     choose_thresholds,
     save_coverage_curve,

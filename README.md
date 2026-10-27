@@ -18,6 +18,7 @@ python -m doodleverse.training.select_cnn   # train the narrow CNN, keep one
 python -m doodleverse.training.analyze      # validation mistakes and the uncertainty gate
 python -m doodleverse.training.skew         # score held-out strokes through the rasterizer
 python -m doodleverse.training.export       # artifacts/model: model.keras and sidecar.json
+uvicorn doodleverse_api.main:app            # serve artifacts/model on :8000
 pytest
 ```
 
@@ -27,4 +28,4 @@ npm ci
 npm run dev
 ```
 
-Results are in [docs/experiments.md](docs/experiments.md). The test split has been scored once, and [ml/splits/v1.test-scored.json](ml/splits/v1.test-scored.json) keeps it that way.
+Results are in [docs/experiments.md](docs/experiments.md). The test split has been scored once, and [ml/splits/v1.test-scored.json](ml/splits/v1.test-scored.json) keeps it that way. The service contract is in [docs/api.md](docs/api.md).
