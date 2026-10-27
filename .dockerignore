@@ -2,6 +2,13 @@
 **/.git
 **/node_modules
 **/.next
+**/__pycache__
+*.egg-info
+.pytest_cache
+.ruff_cache
+.cursor
+apps
+docs
 data
 mlruns
 artifacts

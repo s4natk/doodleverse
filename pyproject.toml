@@ -11,18 +11,15 @@ requires-python = ">=3.12"
 dependencies = [
     "numpy==2.5.4",
     "opencv-python-headless==4.14.0.94",
-    "scikit-learn==1.9.1",
-    "joblib==1.6.0",
-    "matplotlib==3.11.2",
-    "mlflow==3.17.1",
-    "tensorflow==2.21.0",
-    "fastapi==0.146.0",
-    "uvicorn==0.54.0",
-    "pydantic==2.14.1",
+    # Same build without the CUDA kernels: a 274 MB wheel instead of 573 MB. Linux x86_64 only.
+    "tensorflow-cpu==2.21.0; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "tensorflow==2.21.0; sys_platform != 'linux' or platform_machine != 'x86_64'",
 ]
 
 [project.optional-dependencies]
-dev = ["httpx==0.28.1", "pytest==9.1.1", "ruff==0.17.2"]
+serve = ["fastapi==0.146.0", "uvicorn==0.54.0", "pydantic==2.14.1"]
+train = ["scikit-learn==1.9.1", "joblib==1.6.0", "matplotlib==3.11.2", "mlflow==3.17.1"]
+dev = ["doodleverse[serve,train]", "httpx==0.28.1", "pytest==9.1.1", "ruff==0.17.2"]
 
 [tool.pytest.ini_options]
 testpaths = ["ml/tests", "services/inference/tests"]

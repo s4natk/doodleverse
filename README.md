@@ -28,4 +28,10 @@ npm ci
 npm run dev
 ```
 
+Or both in Docker, once `artifacts/model` exists:
+
+```bash
+docker compose -f infra/docker-compose.yml up --build
+```
+
 Results are in [docs/experiments.md](docs/experiments.md). The test split has been scored once, and [ml/splits/v1.test-scored.json](ml/splits/v1.test-scored.json) keeps it that way. The service contract is in [docs/api.md](docs/api.md).

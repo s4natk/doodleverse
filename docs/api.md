@@ -82,3 +82,11 @@ The model loads once, in the lifespan hook. The service refuses to start when th
 Strokes are rasterized with the sidecar's stroke width and pad, then run through a traced `tf.function` with a fixed input signature. Eager Keras calls spend most of their time in per-call overhead at batch size 1.
 
 Each prediction logs one line: label, score, the uncertain flag, stroke and point counts, and latency. Coordinates are never logged.
+
+## Docker
+
+`infra/inference.Dockerfile` installs the package with the `serve` extra and `requirements.lock` as constraints: FastAPI, uvicorn, Pydantic, headless OpenCV, and TensorFlow. MLflow, matplotlib, and scikit-learn stay out, and a test fails if the serving path imports any of them. On Linux x86_64 TensorFlow comes as `tensorflow-cpu`, the same build without the CUDA kernels. The image has no model in it and runs as an unprivileged user.
+
+`docker image ls` reports 2.39 GB for the image, against 4.58 GB when it installed every dependency, the full `tensorflow` wheel, and `libgl1`, which headless OpenCV does not need.
+
+Compose mounts `artifacts/model` read-only at `/models/doodleverse`, keeps the container filesystem read-only apart from a `/tmp` tmpfs, and health-checks `GET /health`. The web service starts once that check passes.

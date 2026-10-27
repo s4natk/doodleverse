@@ -1,3 +1,5 @@
+name: doodleverse
+
 services:
   inference:
     build:
@@ -5,6 +7,20 @@ services:
       dockerfile: infra/inference.Dockerfile
     ports:
       - "8000:8000"
+    environment:
+      DOODLEVERSE_MODEL_DIR: /models/doodleverse
+      DOODLEVERSE_CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+    volumes:
+      - ../artifacts/model:/models/doodleverse:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   web:
     build:
@@ -14,3 +30,6 @@ services:
         NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
     ports:
       - "3000:3000"
+    depends_on:
+      inference:
+        condition: service_healthy
