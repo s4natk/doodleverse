@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from doodleverse.preprocess.strokes import strokes_to_model_input, strokes_to_raster
+from doodleverse.preprocess.strokes import PAD_FRACTION, STROKE_WIDTH, strokes_to_model_input, strokes_to_raster
 from doodleverse.preprocess.validate import SketchValidationError
 
 FIXTURE = Path(__file__).parent / "fixtures" / "golden_stroke.npy"
@@ -96,6 +96,19 @@ def test_out_of_range_long_blank_and_invalid_payloads():
         strokes_to_raster([[]], 100, 100)
     with pytest.raises(SketchValidationError):
         strokes_to_raster([[(1, 2)]], 0, 100)
+
+
+def test_width_and_padding_overrides_change_only_the_probe_rasters():
+    strokes = [[(10, 10), (70, 16), (40, 80)]]
+    default = strokes_to_raster(strokes, 100, 100)
+    np.testing.assert_array_equal(default, strokes_to_raster(strokes, 100, 100, STROKE_WIDTH, PAD_FRACTION))
+    assert strokes_to_raster(strokes, 100, 100, stroke_width=STROKE_WIDTH * 2).sum() > default.sum()
+
+    def extent(image: np.ndarray) -> int:
+        rows, cols = np.nonzero(image)
+        return int(max(rows.max() - rows.min(), cols.max() - cols.min()))
+
+    assert extent(strokes_to_raster(strokes, 100, 100, pad_fraction=0.3)) < extent(default)
 
 
 def test_golden_stroke_matches_the_locked_fixture():

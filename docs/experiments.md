@@ -7,6 +7,7 @@ Every number here is written by a script from a local run:
 - training fixes: `doodleverse.training.ablate_cnn`
 - narrow CNN and the kept model: `doodleverse.training.select_cnn`
 - errors and the uncertainty gate: `doodleverse.training.analyze`
+- stroke skew: `doodleverse.training.skew`
 
 ## What a Quick, Draw! bitmap already is
 
@@ -175,3 +176,39 @@ Kept: target 0.99, score at least 0.00 and margin at least 0.70. That accepts 88
 The scores are softmax outputs, not calibrated probabilities. No calibration was fit, and a score of 0.9 is not a promise of being right 90% of the time. On validation the mean top-1 score is 0.940 against an accuracy of 0.952, and the expected calibration error over ten bins is 0.017. That agreement is measured on bitmaps like the training ones, not promised for new drawings. The thresholds were also picked on the split they are reported on, so this coverage is optimistic.
 
 [Coverage curve](figures/gate_coverage.png)
+
+## Stroke skew
+
+The CNN trains on Google's bitmaps. The app sends strokes, which `strokes_to_model_input` rasterizes. To measure the difference, the first 1,000 drawings per class whose line index is not in the split manifest were streamed from the simplified ndjson files, stopping once enough had arrived: 6,186 lines read, 186 skipped as manifest rows, 0 rejected by the sketch validator.
+
+Line i of an ndjson file is row i of the bitmap file. With the starting settings, our raster of a drawing correlates 0.93 with bitmap row i and 0.30 with the next drawing of the same class. So every drawing below is scored twice, as Google's bitmap and as our raster of the same strokes, and the difference is rendering alone.
+
+| input | accuracy | macro-F1 | mean top-1 score | gate coverage | accepted accuracy |
+| --- | --- | --- | --- | --- | --- |
+| validation bitmaps | 0.952 | 0.952 | 0.940 | 88.2% | 0.991 |
+| sample, Google's bitmaps | 0.946 | 0.946 | 0.937 | 87.7% | 0.987 |
+| sample, our raster, width 18, pad 0.12 | 0.915 | 0.916 | 0.886 | 76.9% | 0.982 |
+| sample, our raster, width 12, pad 0.08 | 0.945 | 0.945 | 0.934 | 87.0% | 0.986 |
+
+With width 18, pad 0.12, our raster scored 0.031 accuracy below Google's bitmaps of the same drawings and carried 1.29× their ink (pixel correlation 0.928).
+
+That is more than the 0.01 allowed, so stroke width (pixels on the 256 canvas) and pad fraction were searched on this sample only: chosen by accuracy on the even-numbered drawings, reported on the odd-numbered ones. Validation and test bitmaps were not used.
+
+Tune-half accuracy:
+
+| width | pad 0.04 | pad 0.06 | pad 0.08 | pad 0.10 | pad 0.12 | pad 0.14 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10 | 0.874 | 0.879 | 0.887 | 0.895 | 0.904 | 0.898 |
+| 12 | 0.935 | 0.938 | 0.943 | 0.941 | 0.941 | 0.939 |
+| 14 | 0.937 | 0.936 | 0.942 | 0.941 | 0.939 | 0.940 |
+| 16 | 0.931 | 0.929 | 0.931 | 0.933 | 0.934 | 0.931 |
+| 18 | 0.905 | 0.902 | 0.905 | 0.906 | 0.914 | 0.907 |
+| 20 | 0.852 | 0.847 | 0.855 | 0.858 | 0.857 | 0.856 |
+
+Chosen: width 12, pad 0.08. On the held-back odd half, accuracy went from 0.916 to 0.947, against 0.949 for Google's bitmaps of the same drawings. Ink went from 1.29× to 0.98× and pixel correlation from 0.928 to 0.977.
+
+`STROKE_WIDTH` and `PAD_FRACTION` in `preprocess/strokes.py` now ship as width 12, pad 0.08, and the golden stroke fixture is rendered with them.
+
+These are simplified strokes from the dataset, already smoothed and resampled by Google. Pointer events from a browser are denser and noisier, so this measures rendering, not the whole path from a live sketch.
+
+[Examples](figures/skew_examples.png): Google's bitmap above our rasters of the same strokes.

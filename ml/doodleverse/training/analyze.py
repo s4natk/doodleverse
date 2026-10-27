@@ -197,6 +197,7 @@ def run_analysis(
         "target": chosen["target"],
         "val_coverage": chosen["coverage"],
         "val_accepted_accuracy": chosen["accepted_accuracy"],
+        "val_mean_score": mean_score,
         "val_calibration_error": ece,
     }
     artifact_dir.mkdir(parents=True, exist_ok=True)

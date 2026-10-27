@@ -171,6 +171,7 @@ def _experiments_markdown(report: dict, odd: list[dict]) -> str:
         "- training fixes: `doodleverse.training.ablate_cnn`",
         "- narrow CNN and the kept model: `doodleverse.training.select_cnn`",
         "- errors and the uncertainty gate: `doodleverse.training.analyze`",
+        "- stroke skew: `doodleverse.training.skew`",
         "",
         "## What a Quick, Draw! bitmap already is",
         "",
