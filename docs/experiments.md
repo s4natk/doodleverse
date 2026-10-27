@@ -8,6 +8,8 @@ Every number here is written by a script from a local run:
 - narrow CNN and the kept model: `doodleverse.training.select_cnn`
 - errors and the uncertainty gate: `doodleverse.training.analyze`
 - stroke skew: `doodleverse.training.skew`
+- export: `doodleverse.training.export`
+- the single test score: `doodleverse.training.score_test_split`
 
 ## What a Quick, Draw! bitmap already is
 
@@ -212,3 +214,31 @@ Chosen: width 12, pad 0.08. On the held-back odd half, accuracy went from 0.916 
 These are simplified strokes from the dataset, already smoothed and resampled by Google. Pointer events from a browser are denser and noisier, so this measures rendering, not the whole path from a live sketch.
 
 [Examples](figures/skew_examples.png): Google's bitmap above our rasters of the same strokes.
+
+## Export
+
+`artifacts/model/model.keras` is the gap CNN saved without optimizer state: 424 KB, against 1,167 KB for the training save, which also holds Adam's two moment estimates for every weight. The export is reloaded before the sidecar is written and has to return six probabilities that sum to 1.
+
+`sidecar.json` sits next to it with what serving needs and what produced the file: labels in softmax order, input size 28 and `ink_high` polarity, the rasterizer settings (canvas 256, stroke width 12, pad 0.08), the gate (score at least 0.00, margin at least 0.70), 94,118 parameters, file size and SHA-256, validation and test metrics, and the git commit. Test metrics stay empty until `doodleverse.training.score_test_split` fills them in, once.
+
+## Test split
+
+Scored once, after the model, the gate, and the rasterizer were frozen: 3,600 drawings, none of them read before. `ml/splits/v1.test-scored.json` records the result and makes a second run refuse.
+
+| split | accuracy | macro-F1 | gate coverage | accepted accuracy |
+| --- | --- | --- | --- | --- |
+| validation | 0.952 | 0.952 | 88.2% | 0.991 |
+| test | 0.950 | 0.950 | 86.8% | 0.991 |
+
+| class | precision | recall | f1 | support |
+| --- | --- | --- | --- | --- |
+| sun | 0.969 | 0.977 | 0.973 | 600 |
+| cloud | 0.953 | 0.952 | 0.952 | 600 |
+| tree | 0.973 | 0.907 | 0.939 | 600 |
+| flower | 0.929 | 0.960 | 0.944 | 600 |
+| car | 0.951 | 0.973 | 0.962 | 600 |
+| cat | 0.929 | 0.933 | 0.931 | 600 |
+
+Weakest class on test: tree (recall 0.907). The gate thresholds were chosen on validation, so the test row is the honest estimate of what they keep.
+
+[Test confusion](figures/test_confusion.png)

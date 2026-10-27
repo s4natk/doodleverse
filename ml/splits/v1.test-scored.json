@@ -1,0 +1,10 @@
+{
+  "manifest": "v1.json",
+  "model_sha256": "1ce366c1a1709452a673b45285cb3830e62491c950e4ed649d371f526c4d4214",
+  "variant": "gap",
+  "count": 3600,
+  "accuracy": 0.9502777777777778,
+  "macro_f1": 0.9501986050379608,
+  "gate_coverage": 0.8683333333333333,
+  "gate_accepted_accuracy": 0.991362763915547
+}

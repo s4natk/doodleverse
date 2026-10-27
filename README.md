@@ -14,6 +14,10 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 python -m doodleverse.data.prepare          # download six classes, write the split
 python -m doodleverse.training.compare      # train the baseline and the CNN
+python -m doodleverse.training.select_cnn   # train the narrow CNN, keep one
+python -m doodleverse.training.analyze      # validation mistakes and the uncertainty gate
+python -m doodleverse.training.skew         # score held-out strokes through the rasterizer
+python -m doodleverse.training.export       # artifacts/model: model.keras and sidecar.json
 pytest
 ```
 
@@ -23,4 +27,4 @@ npm ci
 npm run dev
 ```
 
-Results are in [docs/experiments.md](docs/experiments.md).
+Results are in [docs/experiments.md](docs/experiments.md). The test split has been scored once, and [ml/splits/v1.test-scored.json](ml/splits/v1.test-scored.json) keeps it that way.
