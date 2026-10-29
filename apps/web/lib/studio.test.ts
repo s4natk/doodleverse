@@ -80,6 +80,18 @@ describe("confirm and pick", () => {
     expect(picked.placed.map((item) => [item.label, item.picked])).toEqual([["flower", true]]);
   });
 
+  it("hands placements to the world once and never reuses an id", () => {
+    const suggested = run(sent, { type: "resolved", requestId: requestId(sent), prediction: prediction(false) });
+    const first = run(suggested, { type: "confirm" });
+    const handed = run(first, { type: "spawned", id: first.placed[0].id });
+    expect(handed.placed).toEqual([]);
+    expect(run(handed, { type: "spawned", id: 1 })).toBe(handed);
+
+    const again = run(handed, ...LINE, { type: "recognize", canvas: CANVAS });
+    const second = run(again, { type: "resolved", requestId: requestId(again), prediction: prediction(false) }, { type: "confirm" });
+    expect(second.placed.map((item) => item.id)).toEqual([2]);
+  });
+
   it("any of the six can be picked, including ones outside the top three", () => {
     const suggested = run(sent, { type: "resolved", requestId: requestId(sent), prediction: prediction(false) });
     for (const label of LABELS) {

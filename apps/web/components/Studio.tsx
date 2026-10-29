@@ -5,7 +5,6 @@ import { useCallback, useEffect, useReducer, useState } from "react";
 import { pickRecognizer, RecognizeError, type CanvasSize } from "../lib/inference";
 import type { SketchAction } from "../lib/sketch";
 import { canRecognize, INITIAL_STUDIO, studioReducer } from "../lib/studio";
-import { ConfirmedList } from "./ConfirmedList";
 import { RecognizePanel } from "./RecognizePanel";
 import { SketchPad, type Tool } from "./SketchPad";
 import { THICKNESS, Toolbar } from "./Toolbar";
@@ -21,6 +20,7 @@ export function Studio() {
   const locked = flow.kind === "recognizing";
 
   const onSketch = useCallback((action: SketchAction) => dispatch({ type: "sketch", action }), []);
+  const onSpawned = useCallback((id: number) => dispatch({ type: "spawned", id }), []);
 
   useEffect(() => {
     function undoOnShortcut(event: KeyboardEvent) {
@@ -69,34 +69,34 @@ export function Studio() {
           onUndo={() => onSketch({ type: "undo" })}
           onClear={() => onSketch({ type: "clear" })}
         />
-        <div className="aspect-[4/3] w-full">
-          <SketchPad
-            strokes={sketch.strokes}
-            active={sketch.active}
-            tool={tool}
-            width={width}
-            disabled={locked}
-            onAction={onSketch}
-            onResize={setCanvasSize}
-          />
-        </div>
-        <div className="aspect-[4/3] w-full">
-          <World placements={state.placed} />
+        {/* The sketch layer sits exactly over the world, so a confirmed drawing settles from where it was drawn. */}
+        <div className="relative aspect-[4/3] w-full">
+          <div className="absolute inset-0">
+            <World placements={state.placed} onSpawned={onSpawned} />
+          </div>
+          <div className="absolute inset-0">
+            <SketchPad
+              strokes={sketch.strokes}
+              active={sketch.active}
+              tool={tool}
+              width={width}
+              disabled={locked}
+              onAction={onSketch}
+              onResize={setCanvasSize}
+            />
+          </div>
         </div>
       </div>
-      <div className="flex flex-col gap-4">
-        <RecognizePanel
-          flow={flow}
-          canRecognize={canvasSize !== null && canRecognize(state)}
-          mocked={mocked}
-          onRecognize={() => canvasSize && dispatch({ type: "recognize", canvas: canvasSize })}
-          onConfirm={() => dispatch({ type: "confirm" })}
-          onPick={(label) => dispatch({ type: "pick", label })}
-          onRetry={() => dispatch({ type: "retry" })}
-          onRevise={() => dispatch({ type: "revise" })}
-        />
-        <ConfirmedList placed={state.placed} />
-      </div>
+      <RecognizePanel
+        flow={flow}
+        canRecognize={canvasSize !== null && canRecognize(state)}
+        mocked={mocked}
+        onRecognize={() => canvasSize && dispatch({ type: "recognize", canvas: canvasSize })}
+        onConfirm={() => dispatch({ type: "confirm" })}
+        onPick={(label) => dispatch({ type: "pick", label })}
+        onRetry={() => dispatch({ type: "retry" })}
+        onRevise={() => dispatch({ type: "revise" })}
+      />
     </div>
   );
 }

@@ -5,9 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import type { Placement } from "../lib/studio";
 import type { Scene } from "../lib/world/scene";
 
-type Props = { placements: Placement[] };
+type Props = {
+  placements: Placement[];
+  onSpawned: (id: number) => void;
+};
 
-export function World({ placements }: Props) {
+export function World({ placements, onSpawned }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<Scene | null>(null);
   const spawnedRef = useRef(0);
@@ -46,7 +49,10 @@ export function World({ placements }: Props) {
         spawnedRef.current = placement.id;
       }
     }
-  }, [placements, ready]);
+    if (placements.length > 0) {
+      onSpawned(spawnedRef.current);
+    }
+  }, [placements, ready, onSpawned]);
 
   return <div ref={hostRef} className="h-full w-full overflow-hidden rounded-2xl bg-[#5d6a86]" aria-label="World" role="img" />;
 }

@@ -141,8 +141,8 @@ export function SketchPad({ strokes, active, tool, width, disabled = false, onAc
     <canvas
       ref={canvasRef}
       aria-label="Drawing area"
-      className={`block h-full w-full touch-none select-none rounded-2xl bg-white shadow-inner ${
-        disabled ? "cursor-wait opacity-80" : tool === "eraser" ? "cursor-cell" : "cursor-crosshair"
+      className={`block h-full w-full touch-none select-none rounded-2xl ${
+        disabled ? "cursor-wait" : tool === "eraser" ? "cursor-cell" : "cursor-crosshair"
       }`}
       onPointerDown={handleDown}
       onPointerMove={handleMove}

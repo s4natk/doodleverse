@@ -27,10 +27,12 @@ export type Placement = {
 export type StudioState = {
   sketch: SketchState;
   flow: Flow;
+  /** Confirmed drawings the world has not spawned yet. */
   placed: Placement[];
   /** The canvas size the last request was made with. */
   canvas: CanvasSize | null;
   nextRequest: number;
+  nextPlacement: number;
 };
 
 export type StudioEvent =
@@ -41,7 +43,8 @@ export type StudioEvent =
   | { type: "confirm" }
   | { type: "pick"; label: Label }
   | { type: "retry" }
-  | { type: "revise" };
+  | { type: "revise" }
+  | { type: "spawned"; id: number };
 
 export const INITIAL_STUDIO: StudioState = {
   sketch: EMPTY_SKETCH,
@@ -49,6 +52,7 @@ export const INITIAL_STUDIO: StudioState = {
   placed: [],
   canvas: null,
   nextRequest: 1,
+  nextPlacement: 1,
 };
 
 const DRAWING: Flow = { kind: "drawing" };
@@ -72,8 +76,14 @@ function place(state: StudioState, label: Label, picked: boolean): StudioState {
   if (!bounds || !state.canvas) {
     return state;
   }
-  const placement = { id: state.placed.length + 1, label, picked, strokes, bounds, canvas: state.canvas };
-  return { ...state, sketch: EMPTY_SKETCH, flow: DRAWING, placed: [...state.placed, placement] };
+  const placement = { id: state.nextPlacement, label, picked, strokes, bounds, canvas: state.canvas };
+  return {
+    ...state,
+    sketch: EMPTY_SKETCH,
+    flow: DRAWING,
+    placed: [...state.placed, placement],
+    nextPlacement: state.nextPlacement + 1,
+  };
 }
 
 export function studioReducer(state: StudioState, event: StudioEvent): StudioState {
@@ -122,5 +132,9 @@ export function studioReducer(state: StudioState, event: StudioEvent): StudioSta
       return flow.kind === "suggested" || flow.kind === "choosing" || flow.kind === "failed"
         ? { ...state, flow: DRAWING }
         : state;
+    case "spawned": {
+      const placed = state.placed.filter((placement) => placement.id > event.id);
+      return placed.length === state.placed.length ? state : { ...state, placed };
+    }
   }
 }
