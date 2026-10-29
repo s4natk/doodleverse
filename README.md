@@ -25,7 +25,8 @@ pytest
 ```bash
 cd apps/web
 npm ci
-npm run dev
+npm run dev                  # talks to the API on :8000; NEXT_PUBLIC_MOCK_INFERENCE=1 fakes it instead
+npm test && npm run lint
 ```
 
 Or both in Docker, once `artifacts/model` exists:
