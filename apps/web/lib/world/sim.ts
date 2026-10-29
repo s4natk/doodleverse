@@ -42,10 +42,16 @@ export type Pose = {
   settled: number;
 };
 
-export type World = { entities: Entity[]; sunlight: number; nextId: number };
+export type World = {
+  entities: Entity[];
+  sunlight: number;
+  nextId: number;
+  /** 1 for full motion, 0 when the person asked for reduced motion: no pulse, sway, bob, or drift. */
+  motion: number;
+};
 
 export function createWorld(): World {
-  return { entities: [], sunlight: 0, nextId: 1 };
+  return { entities: [], sunlight: 0, nextId: 1, motion: 1 };
 }
 
 // Same id, same number: placement and cycles do not change between runs.
@@ -114,36 +120,36 @@ export function step(world: World, dt = STEP): void {
       suns += 1;
     }
     if (entity.drift !== 0 && entity.age > SPAWN_SECONDS) {
-      entity.x = wrap(entity, entity.x + entity.drift * dt);
+      entity.x = wrap(entity, entity.x + entity.drift * world.motion * dt);
     }
   }
   const daylight = Math.min(1, suns * SUN_LIGHT);
   world.sunlight += (daylight - world.sunlight) * (1 - Math.exp(-dt / LIGHT_EASE_SECONDS));
 }
 
-/** The pose after settling, `t` world seconds in. */
-function settledPose(entity: Entity, t: number): Pose {
+/** The pose after settling, `t` world seconds in. `motion` scales every repeating movement. */
+function settledPose(entity: Entity, t: number, motion: number): Pose {
   const { rest, phase } = entity;
   const base: Pose = { x: rest.x, y: rest.y, scale: rest.scale, rotation: 0, glow: 0, settled: 1 };
   switch (entity.label) {
     case "sun": {
-      const wave = Math.sin((2 * Math.PI * t) / 4 + phase);
+      const wave = motion * Math.sin((2 * Math.PI * t) / 4 + phase);
       return { ...base, scale: rest.scale * (1 + SUN_PULSE * wave), glow: 0.6 + 0.2 * wave };
     }
     case "cloud":
-      return { ...base, x: entity.x, y: rest.y + 4 * Math.sin((2 * Math.PI * t) / 6 + phase) };
+      return { ...base, x: entity.x, y: rest.y + 4 * motion * Math.sin((2 * Math.PI * t) / 6 + phase) };
     case "tree": {
       const grown = easeOutCubic(Math.min(1, t / TREE_GROW_SECONDS));
       return { ...base, scale: rest.scale * (SAPLING + (1 - SAPLING) * grown) };
     }
     default:
-      return { ...base, rotation: 0.03 * Math.sin((2 * Math.PI * t) / 3 + phase) };
+      return { ...base, rotation: 0.03 * motion * Math.sin((2 * Math.PI * t) / 3 + phase) };
   }
 }
 
-export function pose(entity: Entity): Pose {
+export function pose(entity: Entity, motion = 1): Pose {
   const settled = Math.min(1, entity.age / SPAWN_SECONDS);
-  const resting = settledPose(entity, Math.max(0, entity.age - SPAWN_SECONDS));
+  const resting = settledPose(entity, Math.max(0, entity.age - SPAWN_SECONDS), motion);
   if (settled >= 1) {
     return resting;
   }

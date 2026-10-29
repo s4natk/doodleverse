@@ -137,6 +137,22 @@ describe("tree", () => {
   });
 });
 
+describe("reduced motion", () => {
+  it("stops the pulse, the bob, and the drift, but trees still grow", () => {
+    const world = createWorld();
+    world.motion = 0;
+    const sun = spawn(world, sketch("sun"));
+    const cloud = spawn(world, sketch("cloud", 400, 80, 120));
+    const tree = spawn(world, sketch("tree", 300, 300, 200));
+    run(world, SPAWN_SECONDS + STEP);
+    const grownBefore = pose(tree, 0).scale;
+    run(world, 3);
+    expect(pose(sun, 0).scale).toBe(sun.rest.scale);
+    expect(pose(cloud, 0)).toMatchObject({ x: cloud.rest.x, y: cloud.rest.y });
+    expect(pose(tree, 0).scale).toBeGreaterThan(grownBefore);
+  });
+});
+
 describe("clear and reset", () => {
   it("clear empties the world and lets the daylight fade", () => {
     const world = createWorld();

@@ -93,7 +93,10 @@ function buildView(entity: Entity, glow: Texture): View {
   return { root, glow: sprite };
 }
 
-/** One Pixi app and one ticker for the whole world. `destroy` releases every view, texture, and listener. */
+/**
+ * One Pixi app and one ticker for the whole world. Removing entities destroys their display objects;
+ * `destroy` also releases the shared textures, the gradients, the ticker callback, and the motion listener.
+ */
 export async function createScene(host: HTMLElement): Promise<Scene> {
   const app = new Application();
   await app.init({
@@ -115,6 +118,12 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
   shaded.sortableChildren = true;
   app.stage.addChild(dusk.graphics, day.graphics, suns, shaded);
   const views = new Map<number, View>();
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const applyMotion = () => {
+    world.motion = reducedMotion.matches ? 0 : 1;
+  };
+  applyMotion();
+  reducedMotion.addEventListener("change", applyMotion);
 
   function sync(): void {
     app.stage.scale.set(app.screen.width / WORLD_WIDTH);
@@ -125,7 +134,7 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       if (!view) {
         continue;
       }
-      const now = pose(entity);
+      const now = pose(entity, world.motion);
       view.root.position.set(now.x, now.y);
       view.root.scale.set(now.scale);
       view.root.rotation = now.rotation;
@@ -189,6 +198,7 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
     },
     destroy() {
       app.ticker.remove(tick);
+      reducedMotion.removeEventListener("change", applyMotion);
       removeViews();
       clearWorld(world);
       glow.destroy(true);
