@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { advance, createClock, MAX_STEPS, STEP } from "./clock";
+import { advance, createClock, MAX_FRAME, MAX_SPEED, MAX_STEPS, STEP } from "./clock";
 import { GROUND_Y, restPosition, restScale, SIZE, toWorld, WORLD_WIDTH, type Sketch } from "./layout";
 
 function frames(clock: ReturnType<typeof createClock>, count: number, ms: number): number {
@@ -42,11 +42,20 @@ describe("fixed-timestep clock", () => {
     expect(clock.owed).toBe(owed);
   });
 
-  it("does not replay a long gap", () => {
+  it("counts a long gap as a quarter second instead of replaying it", () => {
     const clock = createClock();
-    expect(advance(clock, 5000)).toBe(MAX_STEPS);
-    expect(clock.owed).toBe(0);
-    expect(clock.time).toBeCloseTo(MAX_STEPS * STEP, 9);
+    expectWithinOneStep(advance(clock, 5000), MAX_FRAME / STEP);
+    expect(clock.time).toBeLessThanOrEqual(MAX_FRAME + STEP);
+  });
+
+  it("simulates a whole long frame at the fastest speed, and never more steps than that", () => {
+    const fast = createClock();
+    fast.speed = MAX_SPEED;
+    expectWithinOneStep(advance(fast, 250), MAX_STEPS);
+    const runaway = createClock();
+    runaway.speed = MAX_SPEED * 4;
+    expect(advance(runaway, 250)).toBe(MAX_STEPS);
+    expect(runaway.owed).toBe(0);
   });
 });
 

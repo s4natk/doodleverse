@@ -2,7 +2,9 @@
 export const STEP = 1 / 60;
 // A longer frame (a background tab, a breakpoint) counts as this long instead of being replayed.
 export const MAX_FRAME = 0.25;
-export const MAX_STEPS = 10;
+/** Enough for a whole MAX_FRAME at the fastest speed. Anything owed beyond it is dropped. */
+export const MAX_SPEED = 2;
+export const MAX_STEPS = Math.round((MAX_FRAME * MAX_SPEED) / STEP);
 
 export type Clock = {
   /** World seconds owed to the simulation, less than one step after `advance`. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { pickRecognizer, RecognizeError, type CanvasSize } from "../lib/inference";
 import type { SketchAction } from "../lib/sketch";
@@ -8,7 +8,8 @@ import { canRecognize, INITIAL_STUDIO, studioReducer } from "../lib/studio";
 import { RecognizePanel } from "./RecognizePanel";
 import { SketchPad, type Tool } from "./SketchPad";
 import { THICKNESS, Toolbar } from "./Toolbar";
-import { World } from "./World";
+import { World, type WorldHandle } from "./World";
+import { WorldControls } from "./WorldControls";
 
 export function Studio() {
   const [state, dispatch] = useReducer(studioReducer, INITIAL_STUDIO);
@@ -16,6 +17,10 @@ export function Studio() {
   const [width, setWidth] = useState<number>(THICKNESS[1].value);
   const [canvasSize, setCanvasSize] = useState<CanvasSize | null>(null);
   const [{ recognize, mocked }] = useState(() => pickRecognizer());
+  const worldRef = useRef<WorldHandle>(null);
+  const [paused, setPaused] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [count, setCount] = useState(0);
   const { sketch, flow } = state;
   const locked = flow.kind === "recognizing";
 
@@ -72,7 +77,14 @@ export function Studio() {
         {/* The sketch layer sits exactly over the world, so a confirmed drawing settles from where it was drawn. */}
         <div className="relative aspect-[4/3] w-full">
           <div className="absolute inset-0">
-            <World placements={state.placed} onSpawned={onSpawned} />
+            <World
+              ref={worldRef}
+              placements={state.placed}
+              paused={paused}
+              speed={speed}
+              onSpawned={onSpawned}
+              onCountChange={setCount}
+            />
           </div>
           <div className="absolute inset-0">
             <SketchPad
@@ -86,6 +98,19 @@ export function Studio() {
             />
           </div>
         </div>
+        <WorldControls
+          paused={paused}
+          speed={speed}
+          count={count}
+          onPause={setPaused}
+          onSpeed={setSpeed}
+          onClear={() => worldRef.current?.clear()}
+          onReset={() => {
+            worldRef.current?.reset();
+            setPaused(false);
+            setSpeed(1);
+          }}
+        />
       </div>
       <RecognizePanel
         flow={flow}

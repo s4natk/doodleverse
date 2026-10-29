@@ -84,6 +84,17 @@ export function spawn(world: World, sketch: Sketch): Entity {
   return entity;
 }
 
+/** Removes every entity. Daylight fades on its own. */
+export function clearWorld(world: World): void {
+  world.entities.length = 0;
+}
+
+/** Back to the empty, unlit world it started as. Ids keep counting up. */
+export function resetWorld(world: World): void {
+  clearWorld(world);
+  world.sunlight = 0;
+}
+
 function wrap(entity: Entity, x: number): number {
   const half = (entity.drawing.width * entity.rest.scale) / 2;
   if (x - half > WORLD_WIDTH) {

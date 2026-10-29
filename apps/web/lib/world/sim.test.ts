@@ -4,7 +4,20 @@ import type { Label } from "../contract";
 import { STEP } from "./clock";
 import { WORLD_WIDTH, type Sketch } from "./layout";
 import { mixColor } from "./palette";
-import { createWorld, pose, SAPLING, spawn, SPAWN_SECONDS, step, SUN_LIGHT, SUN_PULSE, TREE_GROW_SECONDS, type World } from "./sim";
+import {
+  clearWorld,
+  createWorld,
+  pose,
+  resetWorld,
+  SAPLING,
+  spawn,
+  SPAWN_SECONDS,
+  step,
+  SUN_LIGHT,
+  SUN_PULSE,
+  TREE_GROW_SECONDS,
+  type World,
+} from "./sim";
 
 function sketch(label: Label, minX = 100, minY = 100, size = 60): Sketch {
   return {
@@ -121,6 +134,29 @@ describe("tree", () => {
     }
     run(world, 5);
     expect(pose(tree).scale).toBeCloseTo(tree.rest.scale, 6);
+  });
+});
+
+describe("clear and reset", () => {
+  it("clear empties the world and lets the daylight fade", () => {
+    const world = createWorld();
+    spawn(world, sketch("sun"));
+    spawn(world, sketch("tree"));
+    run(world, 6);
+    clearWorld(world);
+    expect(world.entities).toEqual([]);
+    expect(world.sunlight).toBeGreaterThan(0.5);
+    run(world, 8);
+    expect(world.sunlight).toBeLessThan(0.01);
+  });
+
+  it("reset is dark at once, and new entities never reuse an id", () => {
+    const world = createWorld();
+    const before = spawn(world, sketch("sun"));
+    run(world, 6);
+    resetWorld(world);
+    expect([world.entities.length, world.sunlight]).toEqual([0, 0]);
+    expect(spawn(world, sketch("cloud")).id).toBeGreaterThan(before.id);
   });
 });
 

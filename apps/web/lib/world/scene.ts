@@ -1,12 +1,18 @@
 import { Application, Container, FillGradient, Graphics, Sprite, Texture, type Ticker } from "pixi.js";
 
-import { advance, createClock } from "./clock";
+import { advance, createClock, MAX_SPEED } from "./clock";
 import { GROUND_Y, WORLD_HEIGHT, WORLD_WIDTH, type Drawing, type Sketch } from "./layout";
 import { CLOUD_OUTLINE, DAY, DUSK, INK, mixColor, SHADE_AT_DUSK, STROKE } from "./palette";
-import { createWorld, pose, spawn, step, type Entity } from "./sim";
+import { clearWorld, createWorld, pose, resetWorld, spawn, step, type Entity } from "./sim";
 
 export type Scene = {
   spawn(sketch: Sketch): void;
+  /** How many entities are in the world. */
+  count(): number;
+  setPaused(paused: boolean): void;
+  setSpeed(speed: number): void;
+  clear(): void;
+  reset(): void;
   destroy(): void;
 };
 
@@ -138,6 +144,13 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
     sync();
   }
 
+  function removeViews(): void {
+    for (const view of views.values()) {
+      view.root.destroy({ children: true });
+    }
+    views.clear();
+  }
+
   app.ticker.add(tick);
   sync();
 
@@ -154,13 +167,30 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       views.set(entity.id, view);
       sync();
     },
+    count() {
+      return world.entities.length;
+    },
+    setPaused(paused) {
+      clock.paused = paused;
+    },
+    setSpeed(speed) {
+      clock.speed = Math.min(MAX_SPEED, Math.max(0, speed));
+    },
+    clear() {
+      removeViews();
+      clearWorld(world);
+      sync();
+    },
+    reset() {
+      removeViews();
+      resetWorld(world);
+      Object.assign(clock, createClock());
+      sync();
+    },
     destroy() {
       app.ticker.remove(tick);
-      for (const view of views.values()) {
-        view.root.destroy({ children: true });
-      }
-      views.clear();
-      world.entities.length = 0;
+      removeViews();
+      clearWorld(world);
       glow.destroy(true);
       dusk.gradient.destroy();
       day.gradient.destroy();
