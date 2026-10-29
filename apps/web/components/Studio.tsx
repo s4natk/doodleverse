@@ -9,6 +9,7 @@ import { ConfirmedList } from "./ConfirmedList";
 import { RecognizePanel } from "./RecognizePanel";
 import { SketchPad, type Tool } from "./SketchPad";
 import { THICKNESS, Toolbar } from "./Toolbar";
+import { World } from "./World";
 
 export function Studio() {
   const [state, dispatch] = useReducer(studioReducer, INITIAL_STUDIO);
@@ -78,6 +79,9 @@ export function Studio() {
             onAction={onSketch}
             onResize={setCanvasSize}
           />
+        </div>
+        <div className="aspect-[4/3] w-full">
+          <World placements={state.placed} />
         </div>
       </div>
       <div className="flex flex-col gap-4">
