@@ -92,6 +92,14 @@ describe("confirm and pick", () => {
     expect(second.placed.map((item) => item.id)).toEqual([2]);
   });
 
+  it("moves the first-use prompt along as things are placed", () => {
+    const suggested = run(sent, { type: "resolved", requestId: requestId(sent), prediction: prediction(false) });
+    expect(run(suggested, { type: "confirm" }).firstUse).toBeNull();
+    const asked = run(suggested, { type: "firstUse", step: "sun" });
+    expect(run(asked, { type: "confirm" }).firstUse).toBe("cloud");
+    expect(run(asked, { type: "pick", label: "cat" }).firstUse).toBe("sun");
+  });
+
   it("any of the six can be picked, including ones outside the top three", () => {
     const suggested = run(sent, { type: "resolved", requestId: requestId(sent), prediction: prediction(false) });
     for (const label of LABELS) {

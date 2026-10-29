@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { pickRecognizer, RecognizeError, type CanvasSize } from "../lib/inference";
+import { readStep, saveStep } from "../lib/onboarding";
 import type { SketchAction } from "../lib/sketch";
 import { canRecognize, INITIAL_STUDIO, studioReducer } from "../lib/studio";
+import { FirstUsePrompt } from "./FirstUsePrompt";
 import { RecognizePanel } from "./RecognizePanel";
 import { SketchPad, type Tool } from "./SketchPad";
 import { THICKNESS, Toolbar } from "./Toolbar";
@@ -26,6 +28,16 @@ export function Studio() {
 
   const onSketch = useCallback((action: SketchAction) => dispatch({ type: "sketch", action }), []);
   const onSpawned = useCallback((id: number) => dispatch({ type: "spawned", id }), []);
+
+  useEffect(() => {
+    dispatch({ type: "firstUse", step: readStep(window.localStorage) });
+  }, []);
+
+  useEffect(() => {
+    if (state.firstUse === "done") {
+      saveStep(window.localStorage, "done");
+    }
+  }, [state.firstUse]);
 
   useEffect(() => {
     function undoOnShortcut(event: KeyboardEvent) {
@@ -97,6 +109,7 @@ export function Studio() {
               onResize={setCanvasSize}
             />
           </div>
+          <FirstUsePrompt step={state.firstUse} />
         </div>
         <WorldControls
           paused={paused}
@@ -109,6 +122,8 @@ export function Studio() {
             worldRef.current?.reset();
             setPaused(false);
             setSpeed(1);
+            saveStep(window.localStorage, "sun");
+            dispatch({ type: "firstUse", step: "sun" });
           }}
         />
       </div>

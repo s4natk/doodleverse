@@ -1,6 +1,7 @@
 import type { Label } from "./contract";
 import { boundsOf, type Bounds } from "./geometry";
 import { toRequest, type CanvasSize, type Prediction, type SketchRequest } from "./inference";
+import { nextStep, type FirstUse } from "./onboarding";
 import { EMPTY_SKETCH, sketchReducer, type SketchAction, type SketchState, type Stroke } from "./sketch";
 
 export type Failure = { code: string; message: string };
@@ -33,6 +34,8 @@ export type StudioState = {
   canvas: CanvasSize | null;
   nextRequest: number;
   nextPlacement: number;
+  /** Where the first-use prompt is. Null until it has been read from storage. */
+  firstUse: FirstUse | null;
 };
 
 export type StudioEvent =
@@ -44,7 +47,8 @@ export type StudioEvent =
   | { type: "pick"; label: Label }
   | { type: "retry" }
   | { type: "revise" }
-  | { type: "spawned"; id: number };
+  | { type: "spawned"; id: number }
+  | { type: "firstUse"; step: FirstUse };
 
 export const INITIAL_STUDIO: StudioState = {
   sketch: EMPTY_SKETCH,
@@ -53,6 +57,7 @@ export const INITIAL_STUDIO: StudioState = {
   canvas: null,
   nextRequest: 1,
   nextPlacement: 1,
+  firstUse: null,
 };
 
 const DRAWING: Flow = { kind: "drawing" };
@@ -83,6 +88,7 @@ function place(state: StudioState, label: Label, picked: boolean): StudioState {
     flow: DRAWING,
     placed: [...state.placed, placement],
     nextPlacement: state.nextPlacement + 1,
+    firstUse: state.firstUse === null ? null : nextStep(state.firstUse, label),
   };
 }
 
@@ -136,5 +142,7 @@ export function studioReducer(state: StudioState, event: StudioEvent): StudioSta
       const placed = state.placed.filter((placement) => placement.id > event.id);
       return placed.length === state.placed.length ? state : { ...state, placed };
     }
+    case "firstUse":
+      return state.firstUse === event.step ? state : { ...state, firstUse: event.step };
   }
 }
