@@ -19,6 +19,17 @@ export const CLOUD_DRIFT_MIN = 12;
 export const CLOUD_DRIFT_RANGE = 14;
 export const CLOUD_BOB = 4;
 export const CLOUD_BOB_SECONDS = 6;
+/** A tap this close to a cloud's drawing still counts as a tap on it. */
+export const TAP_SLOP = 16;
+
+/** Rain falls from the middle of a cloud, this fraction of its width. */
+export const RAIN_WIDTH = 0.8;
+/** Water a flower soaks up per second of rain, out of 1. */
+export const RAIN_WATER = 0.5;
+/** A tree in the rain grows this many times faster, */
+export const RAIN_GROWTH = 4;
+/** and keeps going past its usual size up to this. */
+export const RAIN_MAX_GROWTH = 1.25;
 
 export const TREE_GROW_SECONDS = 12;
 /** A new tree starts at this fraction of its grown size. */

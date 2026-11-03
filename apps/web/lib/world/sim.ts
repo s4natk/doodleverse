@@ -16,6 +16,10 @@ import {
   FLOWER_SWAY,
   FLOWER_SWAY_SECONDS,
   LIGHT_EASE_SECONDS,
+  RAIN_GROWTH,
+  RAIN_MAX_GROWTH,
+  RAIN_WATER,
+  RAIN_WIDTH,
   SAPLING,
   SPAWN_SECONDS,
   SUN_GLOW,
@@ -25,6 +29,7 @@ import {
   SUN_PULSE,
   SWAY,
   SWAY_SECONDS,
+  TAP_SLOP,
   TREE_GROW_SECONDS,
   WILT_SECONDS,
 } from "./rules";
@@ -46,12 +51,14 @@ export type Entity = {
   /** World units per second. Only clouds drift. */
   drift: number;
   x: number;
-  /** Trees and flowers: 0 as a sapling or bud, 1 fully grown. */
+  /** Trees and flowers: 0 as a sapling or bud, 1 fully grown. Rain can take a tree past 1. */
   growth: number;
   /** Flowers: rain soaked in, 0 to 1. */
   water: number;
   /** Flowers: 0 closed, 1 fully open. */
   bloom: number;
+  /** Clouds: whether it is raining. */
+  raining: boolean;
 };
 
 export type Pose = {
@@ -112,10 +119,29 @@ export function spawn(world: World, sketch: Sketch): Entity {
     growth: 0,
     water: 0,
     bloom: 0,
+    raining: false,
   };
   world.nextId += 1;
   world.entities.push(entity);
   return entity;
+}
+
+/** Turns rain on or off for the settled cloud at (x, y), the newest one if they overlap. */
+export function tapCloud(world: World, x: number, y: number): Entity | null {
+  for (let index = world.entities.length - 1; index >= 0; index -= 1) {
+    const cloud = world.entities[index];
+    if (cloud.label !== "cloud" || cloud.age <= SPAWN_SECONDS) {
+      continue;
+    }
+    const now = pose(cloud, world.motion);
+    const halfWidth = (cloud.drawing.width * now.scale) / 2 + TAP_SLOP;
+    const halfHeight = (cloud.drawing.height * now.scale) / 2 + TAP_SLOP;
+    if (Math.abs(x - now.x) <= halfWidth && Math.abs(y - now.y) <= halfHeight) {
+      cloud.raining = !cloud.raining;
+      return cloud;
+    }
+  }
+  return null;
 }
 
 /** Removes every entity. Daylight fades on its own. */
@@ -144,13 +170,34 @@ function approach(value: number, target: number, amount: number): number {
   return value < target ? Math.min(target, value + amount) : Math.max(target, value - amount);
 }
 
+/** The stretch of ground a raining cloud waters, or null when it is dry or still settling. */
+export function rainSpan(entity: Entity): [number, number] | null {
+  if (!entity.raining || entity.age <= SPAWN_SECONDS) {
+    return null;
+  }
+  const half = (entity.drawing.width * entity.rest.scale * RAIN_WIDTH) / 2;
+  return [entity.x - half, entity.x + half];
+}
+
+function rainedOn(world: World, x: number): boolean {
+  return world.entities.some((cloud) => {
+    const span = rainSpan(cloud);
+    return span !== null && x >= span[0] && x <= span[1];
+  });
+}
+
 function grow(world: World, entity: Entity, dt: number): void {
+  const wet = rainedOn(world, entity.rest.x);
   if (entity.label === "tree") {
-    entity.growth = Math.min(1, entity.growth + dt / TREE_GROW_SECONDS);
+    if (wet) {
+      entity.growth = Math.min(RAIN_MAX_GROWTH, entity.growth + (RAIN_GROWTH * dt) / TREE_GROW_SECONDS);
+    } else if (entity.growth < 1) {
+      entity.growth = Math.min(1, entity.growth + dt / TREE_GROW_SECONDS);
+    }
     return;
   }
   entity.growth = Math.min(1, entity.growth + dt / FLOWER_GROW_SECONDS);
-  entity.water = Math.max(0, entity.water - dt / DRY_SECONDS);
+  entity.water = wet ? Math.min(1, entity.water + RAIN_WATER * dt) : Math.max(0, entity.water - dt / DRY_SECONDS);
   if (world.sunlight >= BLOOM_LIGHT && entity.water >= BLOOM_WATER) {
     entity.bloom = approach(entity.bloom, 1, dt / BLOOM_SECONDS);
   } else if (world.sunlight < BLOOM_LIGHT) {
@@ -192,8 +239,11 @@ function settledPose(entity: Entity, t: number, motion: number): Pose {
       const bob = CLOUD_BOB * motion * Math.sin((2 * Math.PI * t) / CLOUD_BOB_SECONDS + phase);
       return { ...base, x: entity.x, y: rest.y + bob };
     }
-    case "tree":
-      return { ...base, scale: rest.scale * (SAPLING + (1 - SAPLING) * easeOutCubic(entity.growth)) };
+    case "tree": {
+      const { growth } = entity;
+      const size = growth <= 1 ? SAPLING + (1 - SAPLING) * easeOutCubic(growth) : growth;
+      return { ...base, scale: rest.scale * size };
+    }
     case "flower": {
       const size = BUD + (1 - BUD) * easeOutCubic(entity.growth);
       const swell = 1 + BLOOM_SWELL * easeOutCubic(entity.bloom);

@@ -10,6 +10,7 @@ import {
   DRY_SECONDS,
   FLOWER_GROW_SECONDS,
   FLOWER_SWAY,
+  RAIN_MAX_GROWTH,
   SAPLING,
   SPAWN_SECONDS,
   SUN_LIGHT,
@@ -17,7 +18,7 @@ import {
   TREE_GROW_SECONDS,
   WILT_SECONDS,
 } from "./rules";
-import { clearWorld, createWorld, pose, resetWorld, spawn, step, type World } from "./sim";
+import { clearWorld, createWorld, pose, rainSpan, resetWorld, spawn, step, tapCloud, type World } from "./sim";
 
 function sketch(label: Label, minX = 100, minY = 100, size = 60): Sketch {
   return {
@@ -188,6 +189,66 @@ describe("flower", () => {
     run(world, 6 + WILT_SECONDS);
     expect(flower.bloom).toBe(0);
     expect(flower.water).toBeLessThan(1 - 16 / DRY_SECONDS + 0.01);
+  });
+});
+
+describe("rain", () => {
+  function settledCloud(world: World, minX = 300): ReturnType<typeof spawn> {
+    const cloud = spawn(world, sketch("cloud", minX, 80, 160));
+    cloud.drift = 0;
+    run(world, SPAWN_SECONDS + STEP);
+    return cloud;
+  }
+
+  it("toggles when the cloud is tapped, and only that cloud", () => {
+    const world = createWorld();
+    const left = settledCloud(world, 100);
+    const right = settledCloud(world, 650);
+    expect(tapCloud(world, right.x, right.rest.y)).toBe(right);
+    expect([left.raining, right.raining]).toEqual([false, true]);
+    expect(tapCloud(world, 480, 500)).toBeNull();
+    tapCloud(world, right.x, right.rest.y);
+    expect(right.raining).toBe(false);
+  });
+
+  it("waters the flower under it, which then opens in the sun", () => {
+    const world = createWorld();
+    const cloud = settledCloud(world, 300);
+    const under = spawn(world, sketch("flower", cloud.x - 30, 400, 60));
+    const away = spawn(world, sketch("flower", 820, 400, 60));
+    spawn(world, sketch("sun", 40, 40, 80));
+    tapCloud(world, cloud.x, cloud.rest.y);
+    run(world, 4);
+    expect(under.water).toBeGreaterThan(0.9);
+    expect(away.water).toBe(0);
+    expect(under.bloom).toBeGreaterThan(0.5);
+    expect(away.bloom).toBe(0);
+  });
+
+  it("grows the tree under it faster and past its usual size", () => {
+    const world = createWorld();
+    const cloud = settledCloud(world, 300);
+    const wet = spawn(world, sketch("tree", cloud.x - 50, 300, 100));
+    const dry = spawn(world, sketch("tree", 750, 300, 100));
+    tapCloud(world, cloud.x, cloud.rest.y);
+    run(world, TREE_GROW_SECONDS / 2);
+    expect(wet.growth).toBe(RAIN_MAX_GROWTH);
+    expect(dry.growth).toBeLessThan(0.6);
+    expect(pose(wet).scale).toBeCloseTo(wet.rest.scale * RAIN_MAX_GROWTH, 6);
+    tapCloud(world, cloud.x, cloud.rest.y);
+    run(world, TREE_GROW_SECONDS);
+    expect(wet.growth).toBe(RAIN_MAX_GROWTH);
+    expect(dry.growth).toBe(1);
+  });
+
+  it("follows the cloud as it drifts", () => {
+    const world = createWorld();
+    const cloud = settledCloud(world, 300);
+    tapCloud(world, cloud.x, cloud.rest.y);
+    const [left] = rainSpan(cloud)!;
+    cloud.drift = 40;
+    run(world, 2);
+    expect(rainSpan(cloud)![0]).toBeCloseTo(left + 80, 0);
   });
 });
 
