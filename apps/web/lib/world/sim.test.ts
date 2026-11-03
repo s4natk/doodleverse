@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import type { Label } from "../contract";
 import { STEP } from "./clock";
-import { WORLD_WIDTH, type Sketch } from "./layout";
+import { ROAD_Y, WORLD_WIDTH, type Sketch } from "./layout";
 import { mixColor } from "./palette";
 import {
   BLOOM_SWELL,
   BUD,
+  CAR_SPEED_MIN,
   DRY_SECONDS,
   FLOWER_GROW_SECONDS,
   FLOWER_SWAY,
@@ -249,6 +250,67 @@ describe("rain", () => {
     cloud.drift = 40;
     run(world, 2);
     expect(rainSpan(cloud)![0]).toBeCloseTo(left + 80, 0);
+  });
+});
+
+describe("car", () => {
+  function car(world: World, minX: number, facing: number): ReturnType<typeof spawn> {
+    const entity = spawn(world, sketch("car", minX, 520, 120));
+    entity.facing = facing;
+    entity.startFacing = facing;
+    return entity;
+  }
+
+  it("drives along the road at its own speed once it has settled", () => {
+    const world = createWorld();
+    const entity = car(world, 300, 1);
+    run(world, SPAWN_SECONDS + 0.2);
+    const start = entity.x;
+    run(world, 2);
+    expect(entity.x - start).toBeCloseTo(entity.speed * 2, -1);
+    expect(entity.speed).toBeGreaterThanOrEqual(CAR_SPEED_MIN);
+    expect(Math.abs(entity.y - ROAD_Y)).toBeLessThan(1);
+  });
+
+  it("turns around at the edge of the world and is drawn mirrored", () => {
+    const world = createWorld();
+    const entity = car(world, 800, 1);
+    run(world, 8);
+    expect(entity.facing).toBe(-1);
+    expect(pose(entity).mirror).toBe(-1);
+    expect(entity.x + 60).toBeLessThanOrEqual(WORLD_WIDTH + 1);
+  });
+
+  it("two cars that meet head-on turn away from each other without overlapping", () => {
+    const world = createWorld();
+    const left = car(world, 250, 1);
+    const right = car(world, 590, -1);
+    let closest = Infinity;
+    for (let index = 0; index < 6 / STEP; index += 1) {
+      step(world);
+      if (left.age > SPAWN_SECONDS + STEP) {
+        closest = Math.min(closest, right.x - left.x);
+      }
+    }
+    expect([left.facing, right.facing]).toEqual([-1, 1]);
+    expect(closest).toBeGreaterThan(120 - 4);
+  });
+
+  it("leaves no bodies behind when cleared, and stays parked with reduced motion", () => {
+    const world = createWorld();
+    car(world, 300, 1);
+    run(world, 1);
+    expect(world.traffic.engine.world.bodies.length).toBe(4);
+    clearWorld(world);
+    expect(world.traffic.engine.world.bodies.length).toBe(3);
+
+    const still = createWorld();
+    still.motion = 0;
+    const parked = car(still, 300, 1);
+    run(still, SPAWN_SECONDS + 0.2);
+    const start = parked.x;
+    run(still, 2);
+    expect(Math.abs(parked.x - start)).toBeLessThan(0.5);
   });
 });
 

@@ -5,6 +5,8 @@ import type { Bounds, Point } from "../geometry";
 export const WORLD_WIDTH = 960;
 export const WORLD_HEIGHT = 720;
 export const GROUND_Y = 600;
+/** Cars all drive on this line, so they can run into each other. */
+export const ROAD_Y = GROUND_Y + 50;
 const EDGE = 12;
 
 /** Where an entity hangs from: its middle in the sky, the bottom of its drawing on the ground. */
@@ -83,6 +85,9 @@ export function restPosition(label: Label, at: Point, drawing: Drawing, scale: n
   }
   if (label === "cloud") {
     return [x, clamp(at[1], height / 2 + EDGE, 320)];
+  }
+  if (label === "car") {
+    return [x, ROAD_Y];
   }
   return [x, clamp(at[1], GROUND_Y, GROUND_Y + 80)];
 }

@@ -1,4 +1,5 @@
 import type { Label } from "../contract";
+import { addCar, carPose, createTraffic, removeCars, stepTraffic, type Traffic } from "./cars";
 import { STEP } from "./clock";
 import { restPosition, restScale, toWorld, WORLD_WIDTH, type Drawing, type Sketch } from "./layout";
 import {
@@ -7,6 +8,8 @@ import {
   BLOOM_SWELL,
   BLOOM_WATER,
   BUD,
+  CAR_SPEED_MIN,
+  CAR_SPEED_RANGE,
   CLOUD_BOB,
   CLOUD_BOB_SECONDS,
   CLOUD_DRIFT_MIN,
@@ -50,7 +53,15 @@ export type Entity = {
   phase: number;
   /** World units per second. Only clouds drift. */
   drift: number;
+  /** Where things that move are now: clouds across the sky, cars and cats along the ground. */
   x: number;
+  y: number;
+  /** 1 heading right, -1 heading left. The drawing is mirrored once this differs from `startFacing`. */
+  facing: number;
+  startFacing: number;
+  /** Cars: cruising speed in world units per second. */
+  speed: number;
+  rotation: number;
   /** Trees and flowers: 0 as a sapling or bud, 1 fully grown. Rain can take a tree past 1. */
   growth: number;
   /** Flowers: rain soaked in, 0 to 1. */
@@ -66,6 +77,8 @@ export type Pose = {
   y: number;
   scale: number;
   rotation: number;
+  /** -1 when the drawing is shown mirrored. */
+  mirror: number;
   /** Sun glow strength, 0 to 1. */
   glow: number;
   /** Flowers: how open, 0 to 1. */
@@ -78,12 +91,13 @@ export type World = {
   entities: Entity[];
   sunlight: number;
   nextId: number;
-  /** 1 for full motion, 0 when the person asked for reduced motion: no pulse, sway, bob, or drift. */
+  /** 1 for full motion, 0 when the person asked for reduced motion: nothing pulses, sways, bobs, or travels. */
   motion: number;
+  traffic: Traffic;
 };
 
 export function createWorld(): World {
-  return { entities: [], sunlight: 0, nextId: 1, motion: 1 };
+  return { entities: [], sunlight: 0, nextId: 1, motion: 1, traffic: createTraffic(STEP) };
 }
 
 // Same id, same number: placement and cycles do not change between runs.
@@ -116,6 +130,11 @@ export function spawn(world: World, sketch: Sketch): Entity {
     phase: unit(id, 2) * Math.PI * 2,
     drift: sketch.label === "cloud" ? direction * (CLOUD_DRIFT_MIN + CLOUD_DRIFT_RANGE * unit(id, 3)) : 0,
     x,
+    y,
+    facing: direction,
+    startFacing: direction,
+    speed: sketch.label === "car" ? CAR_SPEED_MIN + CAR_SPEED_RANGE * unit(id, 5) : 0,
+    rotation: 0,
     growth: 0,
     water: 0,
     bloom: 0,
@@ -144,9 +163,10 @@ export function tapCloud(world: World, x: number, y: number): Entity | null {
   return null;
 }
 
-/** Removes every entity. Daylight fades on its own. */
+/** Removes every entity and its physics body. Daylight fades on its own. */
 export function clearWorld(world: World): void {
   world.entities.length = 0;
+  removeCars(world.traffic);
 }
 
 /** Back to the empty, unlit world it started as. Ids keep counting up. */
@@ -221,15 +241,44 @@ export function step(world: World, dt = STEP): void {
     if (entity.label === "tree" || entity.label === "flower") {
       grow(world, entity, dt);
     }
+    if (entity.label === "car" && !world.traffic.cars.has(entity.id)) {
+      const { drawing, rest } = entity;
+      addCar(world.traffic, entity.id, {
+        x: rest.x,
+        width: drawing.width * rest.scale,
+        height: drawing.height * rest.scale,
+        speed: entity.speed,
+        facing: entity.facing,
+      });
+    }
   }
+  drive(world, dt);
   const daylight = Math.min(1, suns * SUN_LIGHT);
   world.sunlight += (daylight - world.sunlight) * (1 - Math.exp(-dt / LIGHT_EASE_SECONDS));
+}
+
+function drive(world: World, dt: number): void {
+  if (world.traffic.cars.size === 0) {
+    return;
+  }
+  stepTraffic(world.traffic, dt, world.motion);
+  for (const entity of world.entities) {
+    const car = world.traffic.cars.get(entity.id);
+    if (car) {
+      const now = carPose(car, dt);
+      entity.x = now.x;
+      entity.y = now.y;
+      entity.facing = now.facing;
+      entity.rotation = now.rotation;
+    }
+  }
 }
 
 /** The pose after settling, `t` world seconds in. `motion` scales every repeating movement. */
 function settledPose(entity: Entity, t: number, motion: number): Pose {
   const { rest, phase } = entity;
-  const base: Pose = { x: rest.x, y: rest.y, scale: rest.scale, rotation: 0, glow: 0, bloom: 0, settled: 1 };
+  const mirror = entity.facing === entity.startFacing ? 1 : -1;
+  const base: Pose = { x: rest.x, y: rest.y, scale: rest.scale, rotation: 0, mirror, glow: 0, bloom: 0, settled: 1 };
   switch (entity.label) {
     case "sun": {
       const wave = motion * Math.sin((2 * Math.PI * t) / SUN_PERIOD_SECONDS + phase);
@@ -250,6 +299,8 @@ function settledPose(entity: Entity, t: number, motion: number): Pose {
       const rotation = FLOWER_SWAY * motion * Math.sin((2 * Math.PI * t) / FLOWER_SWAY_SECONDS + phase);
       return { ...base, scale: rest.scale * size * swell, rotation, bloom: entity.bloom };
     }
+    case "car":
+      return { ...base, x: entity.x, y: entity.y, rotation: entity.rotation };
     default:
       return { ...base, rotation: SWAY * motion * Math.sin((2 * Math.PI * t) / SWAY_SECONDS + phase) };
   }
@@ -267,6 +318,7 @@ export function pose(entity: Entity, motion = 1): Pose {
     y: lerp(entity.from.y, resting.y, t),
     scale: lerp(entity.from.scale, resting.scale, t),
     rotation: lerp(0, resting.rotation, t),
+    mirror: resting.mirror,
     glow: resting.glow * t,
     bloom: resting.bloom,
     settled,

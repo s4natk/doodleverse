@@ -51,6 +51,15 @@ export const DRY_SECONDS = 40;
 /** An open flower is this much bigger than a closed one. */
 export const BLOOM_SWELL = 0.2;
 
+/** Cars drive between these speeds, fixed per car. */
+export const CAR_SPEED_MIN = 40;
+export const CAR_SPEED_RANGE = 30;
+/** Upward speed a car gets when it bumps into something. */
+export const CAR_HOP = 150;
+/** A car's nose tips up this much per unit of upward speed, at most CAR_MAX_TILT radians. */
+export const CAR_TILT = 0.0008;
+export const CAR_MAX_TILT = 0.15;
+
 /** Gentle rocking, in radians, for things with no behavior of their own. */
 export const SWAY = 0.03;
 export const SWAY_SECONDS = 3;

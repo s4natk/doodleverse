@@ -207,7 +207,7 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       }
       const now = pose(entity, world.motion);
       view.root.position.set(now.x, now.y);
-      view.root.scale.set(now.scale);
+      view.root.scale.set(now.scale * now.mirror, now.scale);
       view.root.rotation = now.rotation;
       view.root.tint = mixColor(INK, bodyColor(entity, now.bloom), now.settled);
       if (view.glow) {
