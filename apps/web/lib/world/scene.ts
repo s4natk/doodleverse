@@ -2,7 +2,19 @@ import { Application, Container, FillGradient, Graphics, Sprite, Texture, type T
 
 import { advance, createClock, MAX_SPEED } from "./clock";
 import { GROUND_Y, WORLD_HEIGHT, WORLD_WIDTH, type Drawing, type Sketch } from "./layout";
-import { CLOUD_OUTLINE, DAY, DUSK, INK, mixColor, SHADE_AT_DUSK, STROKE } from "./palette";
+import {
+  BLOOM_GLOW,
+  CLOUD_OUTLINE,
+  DAY,
+  DUSK,
+  FLOWER_CLOSED,
+  FLOWER_OPEN,
+  INK,
+  mixColor,
+  SHADE_AT_DUSK,
+  STROKE,
+  SUN_GLOW_TINT,
+} from "./palette";
 import { clearWorld, createWorld, pose, resetWorld, spawn, step, type Entity } from "./sim";
 
 export type Scene = {
@@ -48,9 +60,9 @@ function glowTexture(): Texture {
   canvas.height = size;
   const context = canvas.getContext("2d")!;
   const gradient = context.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  gradient.addColorStop(0, "rgba(255, 222, 140, 0.95)");
-  gradient.addColorStop(0.4, "rgba(255, 196, 96, 0.4)");
-  gradient.addColorStop(1, "rgba(255, 176, 64, 0)");
+  gradient.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+  gradient.addColorStop(0.4, "rgba(255, 255, 255, 0.4)");
+  gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
   context.fillStyle = gradient;
   context.fillRect(0, 0, size, size);
   return Texture.from(canvas);
@@ -72,25 +84,43 @@ function trace(graphics: Graphics, drawing: Drawing, color: number, extraWidth =
   }
 }
 
+function halo(texture: Texture, size: number, tint: number, y = 0): Sprite {
+  const sprite = new Sprite(texture);
+  sprite.anchor.set(0.5);
+  sprite.blendMode = "add";
+  sprite.width = size;
+  sprite.height = size;
+  sprite.tint = tint;
+  sprite.y = y;
+  return sprite;
+}
+
 function buildView(entity: Entity, glow: Texture): View {
   const root = new Container();
+  const { drawing } = entity;
   let sprite: Sprite | null = null;
   if (entity.label === "sun") {
-    sprite = new Sprite(glow);
-    sprite.anchor.set(0.5);
-    sprite.blendMode = "add";
-    const size = Math.max(entity.drawing.width, entity.drawing.height) * GLOW_SIZE;
-    sprite.width = size;
-    sprite.height = size;
+    sprite = halo(glow, Math.max(drawing.width, drawing.height) * GLOW_SIZE, SUN_GLOW_TINT);
+  } else if (entity.label === "flower") {
+    // A flower's drawing hangs from its base, so its head is near the top.
+    sprite = halo(glow, drawing.width * 1.6, BLOOM_GLOW, -drawing.height * 0.78);
+  }
+  if (sprite) {
+    sprite.alpha = 0;
     root.addChild(sprite);
   }
   const body = new Graphics();
   if (entity.label === "cloud") {
-    trace(body, entity.drawing, CLOUD_OUTLINE, 6);
+    trace(body, drawing, CLOUD_OUTLINE, 6);
   }
-  trace(body, entity.drawing, STROKE[entity.label]);
+  // Flowers are traced in white and tinted, so the color can open up with the bloom.
+  trace(body, drawing, entity.label === "flower" ? 0xffffff : STROKE[entity.label]);
   root.addChild(body);
   return { root, glow: sprite };
+}
+
+function bodyColor(entity: Entity, bloom: number): number {
+  return entity.label === "flower" ? mixColor(FLOWER_CLOSED, FLOWER_OPEN, bloom) : 0xffffff;
 }
 
 /**
@@ -138,9 +168,9 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       view.root.position.set(now.x, now.y);
       view.root.scale.set(now.scale);
       view.root.rotation = now.rotation;
-      view.root.tint = mixColor(INK, 0xffffff, now.settled);
+      view.root.tint = mixColor(INK, bodyColor(entity, now.bloom), now.settled);
       if (view.glow) {
-        view.glow.alpha = now.glow;
+        view.glow.alpha = entity.label === "flower" ? 0.8 * now.bloom : now.glow;
       }
     }
   }

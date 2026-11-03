@@ -2,10 +2,19 @@ import type { Label } from "../contract";
 import { STEP } from "./clock";
 import { restPosition, restScale, toWorld, WORLD_WIDTH, type Drawing, type Sketch } from "./layout";
 import {
+  BLOOM_LIGHT,
+  BLOOM_SECONDS,
+  BLOOM_SWELL,
+  BLOOM_WATER,
+  BUD,
   CLOUD_BOB,
   CLOUD_BOB_SECONDS,
   CLOUD_DRIFT_MIN,
   CLOUD_DRIFT_RANGE,
+  DRY_SECONDS,
+  FLOWER_GROW_SECONDS,
+  FLOWER_SWAY,
+  FLOWER_SWAY_SECONDS,
   LIGHT_EASE_SECONDS,
   SAPLING,
   SPAWN_SECONDS,
@@ -17,6 +26,7 @@ import {
   SWAY,
   SWAY_SECONDS,
   TREE_GROW_SECONDS,
+  WILT_SECONDS,
 } from "./rules";
 
 type Placement = { x: number; y: number; scale: number };
@@ -36,6 +46,12 @@ export type Entity = {
   /** World units per second. Only clouds drift. */
   drift: number;
   x: number;
+  /** Trees and flowers: 0 as a sapling or bud, 1 fully grown. */
+  growth: number;
+  /** Flowers: rain soaked in, 0 to 1. */
+  water: number;
+  /** Flowers: 0 closed, 1 fully open. */
+  bloom: number;
 };
 
 export type Pose = {
@@ -45,6 +61,8 @@ export type Pose = {
   rotation: number;
   /** Sun glow strength, 0 to 1. */
   glow: number;
+  /** Flowers: how open, 0 to 1. */
+  bloom: number;
   /** How far the spawn move has come, 0 to 1. */
   settled: number;
 };
@@ -91,6 +109,9 @@ export function spawn(world: World, sketch: Sketch): Entity {
     phase: unit(id, 2) * Math.PI * 2,
     drift: sketch.label === "cloud" ? direction * (CLOUD_DRIFT_MIN + CLOUD_DRIFT_RANGE * unit(id, 3)) : 0,
     x,
+    growth: 0,
+    water: 0,
+    bloom: 0,
   };
   world.nextId += 1;
   world.entities.push(entity);
@@ -119,6 +140,24 @@ function wrap(entity: Entity, x: number): number {
   return x;
 }
 
+function approach(value: number, target: number, amount: number): number {
+  return value < target ? Math.min(target, value + amount) : Math.max(target, value - amount);
+}
+
+function grow(world: World, entity: Entity, dt: number): void {
+  if (entity.label === "tree") {
+    entity.growth = Math.min(1, entity.growth + dt / TREE_GROW_SECONDS);
+    return;
+  }
+  entity.growth = Math.min(1, entity.growth + dt / FLOWER_GROW_SECONDS);
+  entity.water = Math.max(0, entity.water - dt / DRY_SECONDS);
+  if (world.sunlight >= BLOOM_LIGHT && entity.water >= BLOOM_WATER) {
+    entity.bloom = approach(entity.bloom, 1, dt / BLOOM_SECONDS);
+  } else if (world.sunlight < BLOOM_LIGHT) {
+    entity.bloom = approach(entity.bloom, 0, dt / WILT_SECONDS);
+  }
+}
+
 export function step(world: World, dt = STEP): void {
   let suns = 0;
   for (const entity of world.entities) {
@@ -126,8 +165,14 @@ export function step(world: World, dt = STEP): void {
     if (entity.label === "sun") {
       suns += 1;
     }
-    if (entity.drift !== 0 && entity.age > SPAWN_SECONDS) {
+    if (entity.age <= SPAWN_SECONDS) {
+      continue;
+    }
+    if (entity.drift !== 0) {
       entity.x = wrap(entity, entity.x + entity.drift * world.motion * dt);
+    }
+    if (entity.label === "tree" || entity.label === "flower") {
+      grow(world, entity, dt);
     }
   }
   const daylight = Math.min(1, suns * SUN_LIGHT);
@@ -137,7 +182,7 @@ export function step(world: World, dt = STEP): void {
 /** The pose after settling, `t` world seconds in. `motion` scales every repeating movement. */
 function settledPose(entity: Entity, t: number, motion: number): Pose {
   const { rest, phase } = entity;
-  const base: Pose = { x: rest.x, y: rest.y, scale: rest.scale, rotation: 0, glow: 0, settled: 1 };
+  const base: Pose = { x: rest.x, y: rest.y, scale: rest.scale, rotation: 0, glow: 0, bloom: 0, settled: 1 };
   switch (entity.label) {
     case "sun": {
       const wave = motion * Math.sin((2 * Math.PI * t) / SUN_PERIOD_SECONDS + phase);
@@ -147,9 +192,13 @@ function settledPose(entity: Entity, t: number, motion: number): Pose {
       const bob = CLOUD_BOB * motion * Math.sin((2 * Math.PI * t) / CLOUD_BOB_SECONDS + phase);
       return { ...base, x: entity.x, y: rest.y + bob };
     }
-    case "tree": {
-      const grown = easeOutCubic(Math.min(1, t / TREE_GROW_SECONDS));
-      return { ...base, scale: rest.scale * (SAPLING + (1 - SAPLING) * grown) };
+    case "tree":
+      return { ...base, scale: rest.scale * (SAPLING + (1 - SAPLING) * easeOutCubic(entity.growth)) };
+    case "flower": {
+      const size = BUD + (1 - BUD) * easeOutCubic(entity.growth);
+      const swell = 1 + BLOOM_SWELL * easeOutCubic(entity.bloom);
+      const rotation = FLOWER_SWAY * motion * Math.sin((2 * Math.PI * t) / FLOWER_SWAY_SECONDS + phase);
+      return { ...base, scale: rest.scale * size * swell, rotation, bloom: entity.bloom };
     }
     default:
       return { ...base, rotation: SWAY * motion * Math.sin((2 * Math.PI * t) / SWAY_SECONDS + phase) };
@@ -169,6 +218,7 @@ export function pose(entity: Entity, motion = 1): Pose {
     scale: lerp(entity.from.scale, resting.scale, t),
     rotation: lerp(0, resting.rotation, t),
     glow: resting.glow * t,
+    bloom: resting.bloom,
     settled,
   };
 }

@@ -14,6 +14,13 @@ export const STROKE: Record<Label, number> = {
 
 export const CLOUD_OUTLINE = 0x8fa7bf;
 
+export const SUN_GLOW_TINT = 0xffd98a;
+
+/** A flower's color closed, then fully open. */
+export const FLOWER_CLOSED = 0x9c7f8e;
+export const FLOWER_OPEN = 0xe2508e;
+export const BLOOM_GLOW = 0xff9fc8;
+
 /** Sky and ground with no sun, then in full daylight. */
 export const DUSK = { skyTop: 0x5d6a86, skyHorizon: 0xa898a6, ground: 0x5f6e52, groundEdge: 0x4f5c45 };
 export const DAY = { skyTop: 0x8fcbea, skyHorizon: 0xfbe3b8, ground: 0x9cc472, groundEdge: 0x7fa95a };

@@ -4,7 +4,19 @@ import type { Label } from "../contract";
 import { STEP } from "./clock";
 import { WORLD_WIDTH, type Sketch } from "./layout";
 import { mixColor } from "./palette";
-import { SAPLING, SPAWN_SECONDS, SUN_LIGHT, SUN_PULSE, TREE_GROW_SECONDS } from "./rules";
+import {
+  BLOOM_SWELL,
+  BUD,
+  DRY_SECONDS,
+  FLOWER_GROW_SECONDS,
+  FLOWER_SWAY,
+  SAPLING,
+  SPAWN_SECONDS,
+  SUN_LIGHT,
+  SUN_PULSE,
+  TREE_GROW_SECONDS,
+  WILT_SECONDS,
+} from "./rules";
 import { clearWorld, createWorld, pose, resetWorld, spawn, step, type World } from "./sim";
 
 function sketch(label: Label, minX = 100, minY = 100, size = 60): Sketch {
@@ -122,6 +134,60 @@ describe("tree", () => {
     }
     run(world, 5);
     expect(pose(tree).scale).toBeCloseTo(tree.rest.scale, 6);
+  });
+});
+
+describe("flower", () => {
+  function grownFlower(): { world: World; flower: ReturnType<typeof spawn> } {
+    const world = createWorld();
+    const flower = spawn(world, sketch("flower", 300, 300, 100));
+    run(world, SPAWN_SECONDS + FLOWER_GROW_SECONDS + 1);
+    return { world, flower };
+  }
+
+  it("grows from a bud and sways", () => {
+    const world = createWorld();
+    const flower = spawn(world, sketch("flower", 300, 300, 100));
+    run(world, SPAWN_SECONDS + STEP);
+    expect(pose(flower).scale).toBeCloseTo(flower.rest.scale * BUD, 1);
+    let tilt = 0;
+    for (let index = 0; index < FLOWER_GROW_SECONDS / STEP; index += 1) {
+      step(world);
+      tilt = Math.max(tilt, Math.abs(pose(flower).rotation));
+    }
+    expect(pose(flower).scale).toBeCloseTo(flower.rest.scale, 2);
+    expect(tilt).toBeGreaterThan(FLOWER_SWAY * 0.9);
+  });
+
+  it("opens only with both sun and water", () => {
+    const dry = grownFlower();
+    spawn(dry.world, sketch("sun", 600, 100, 80));
+    run(dry.world, 10);
+    expect(dry.flower.bloom).toBe(0);
+
+    const dark = grownFlower();
+    dark.flower.water = 1;
+    run(dark.world, 3);
+    expect(dark.flower.bloom).toBe(0);
+
+    const both = grownFlower();
+    both.flower.water = 1;
+    spawn(both.world, sketch("sun", 600, 100, 80));
+    run(both.world, 6);
+    expect(both.flower.bloom).toBe(1);
+    expect(pose(both.flower).scale).toBeCloseTo(both.flower.rest.scale * (1 + BLOOM_SWELL), 2);
+    expect(pose(both.flower).bloom).toBe(1);
+  });
+
+  it("closes again once the light is gone, and dries out", () => {
+    const { world, flower } = grownFlower();
+    flower.water = 1;
+    spawn(world, sketch("sun", 600, 100, 80));
+    run(world, 6);
+    world.entities.splice(world.entities.findIndex((entity) => entity.label === "sun"), 1);
+    run(world, 6 + WILT_SECONDS);
+    expect(flower.bloom).toBe(0);
+    expect(flower.water).toBeLessThan(1 - 16 / DRY_SECONDS + 0.01);
   });
 });
 
