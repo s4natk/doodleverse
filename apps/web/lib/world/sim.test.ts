@@ -4,20 +4,8 @@ import type { Label } from "../contract";
 import { STEP } from "./clock";
 import { WORLD_WIDTH, type Sketch } from "./layout";
 import { mixColor } from "./palette";
-import {
-  clearWorld,
-  createWorld,
-  pose,
-  resetWorld,
-  SAPLING,
-  spawn,
-  SPAWN_SECONDS,
-  step,
-  SUN_LIGHT,
-  SUN_PULSE,
-  TREE_GROW_SECONDS,
-  type World,
-} from "./sim";
+import { SAPLING, SPAWN_SECONDS, SUN_LIGHT, SUN_PULSE, TREE_GROW_SECONDS } from "./rules";
+import { clearWorld, createWorld, pose, resetWorld, spawn, step, type World } from "./sim";
 
 function sketch(label: Label, minX = 100, minY = 100, size = 60): Sketch {
   return {

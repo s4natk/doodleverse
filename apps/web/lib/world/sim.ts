@@ -1,16 +1,23 @@
 import type { Label } from "../contract";
 import { STEP } from "./clock";
 import { restPosition, restScale, toWorld, WORLD_WIDTH, type Drawing, type Sketch } from "./layout";
-
-/** Seconds a confirmed drawing takes to move from where it was drawn to where it settles. */
-export const SPAWN_SECONDS = 0.6;
-export const TREE_GROW_SECONDS = 12;
-/** A new tree starts at this fraction of its grown size. */
-export const SAPLING = 0.35;
-export const SUN_PULSE = 0.05;
-/** Daylight one sun brings, out of 1. Two or more bring full day. */
-export const SUN_LIGHT = 0.85;
-const LIGHT_EASE_SECONDS = 1.2;
+import {
+  CLOUD_BOB,
+  CLOUD_BOB_SECONDS,
+  CLOUD_DRIFT_MIN,
+  CLOUD_DRIFT_RANGE,
+  LIGHT_EASE_SECONDS,
+  SAPLING,
+  SPAWN_SECONDS,
+  SUN_GLOW,
+  SUN_GLOW_PULSE,
+  SUN_LIGHT,
+  SUN_PERIOD_SECONDS,
+  SUN_PULSE,
+  SWAY,
+  SWAY_SECONDS,
+  TREE_GROW_SECONDS,
+} from "./rules";
 
 type Placement = { x: number; y: number; scale: number };
 
@@ -82,7 +89,7 @@ export function spawn(world: World, sketch: Sketch): Entity {
     rest: { x, y, scale },
     age: 0,
     phase: unit(id, 2) * Math.PI * 2,
-    drift: sketch.label === "cloud" ? direction * (12 + 14 * unit(id, 3)) : 0,
+    drift: sketch.label === "cloud" ? direction * (CLOUD_DRIFT_MIN + CLOUD_DRIFT_RANGE * unit(id, 3)) : 0,
     x,
   };
   world.nextId += 1;
@@ -133,17 +140,19 @@ function settledPose(entity: Entity, t: number, motion: number): Pose {
   const base: Pose = { x: rest.x, y: rest.y, scale: rest.scale, rotation: 0, glow: 0, settled: 1 };
   switch (entity.label) {
     case "sun": {
-      const wave = motion * Math.sin((2 * Math.PI * t) / 4 + phase);
-      return { ...base, scale: rest.scale * (1 + SUN_PULSE * wave), glow: 0.6 + 0.2 * wave };
+      const wave = motion * Math.sin((2 * Math.PI * t) / SUN_PERIOD_SECONDS + phase);
+      return { ...base, scale: rest.scale * (1 + SUN_PULSE * wave), glow: SUN_GLOW + SUN_GLOW_PULSE * wave };
     }
-    case "cloud":
-      return { ...base, x: entity.x, y: rest.y + 4 * motion * Math.sin((2 * Math.PI * t) / 6 + phase) };
+    case "cloud": {
+      const bob = CLOUD_BOB * motion * Math.sin((2 * Math.PI * t) / CLOUD_BOB_SECONDS + phase);
+      return { ...base, x: entity.x, y: rest.y + bob };
+    }
     case "tree": {
       const grown = easeOutCubic(Math.min(1, t / TREE_GROW_SECONDS));
       return { ...base, scale: rest.scale * (SAPLING + (1 - SAPLING) * grown) };
     }
     default:
-      return { ...base, rotation: 0.03 * motion * Math.sin((2 * Math.PI * t) / 3 + phase) };
+      return { ...base, rotation: SWAY * motion * Math.sin((2 * Math.PI * t) / SWAY_SECONDS + phase) };
   }
 }
 
