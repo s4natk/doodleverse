@@ -45,9 +45,19 @@ export function clamp(value: number, low: number, high: number): number {
   return Math.min(high, Math.max(low, value));
 }
 
+/** World units per canvas pixel. The canvas and the world share a 4:3 frame. */
+function worldScale(canvas: { width: number; height: number }): number {
+  return Math.min(WORLD_WIDTH / canvas.width, WORLD_HEIGHT / canvas.height);
+}
+
+export function toWorldPoint(point: Point, canvas: { width: number; height: number }): Point {
+  const k = worldScale(canvas);
+  return [point[0] * k, point[1] * k];
+}
+
 /** The drawing in world units and the world point it hangs from, where it was drawn. */
 export function toWorld(sketch: Sketch): { drawing: Drawing; at: Point } {
-  const k = Math.min(WORLD_WIDTH / sketch.canvas.width, WORLD_HEIGHT / sketch.canvas.height);
+  const k = worldScale(sketch.canvas);
   const { minX, minY, maxX, maxY } = sketch.bounds;
   const at: Point = [((minX + maxX) / 2) * k, (ANCHOR[sketch.label] === "base" ? maxY : (minY + maxY) / 2) * k];
   const strokes = sketch.strokes.map((stroke) => ({

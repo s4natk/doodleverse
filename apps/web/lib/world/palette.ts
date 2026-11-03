@@ -13,6 +13,7 @@ export const STROKE: Record<Label, number> = {
 };
 
 export const CLOUD_OUTLINE = 0x8fa7bf;
+export const RAIN = 0x5f93d6;
 
 export const SUN_GLOW_TINT = 0xffd98a;
 

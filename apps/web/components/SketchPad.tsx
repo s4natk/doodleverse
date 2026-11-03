@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import type { Point } from "../lib/geometry";
-import type { SketchAction, Stroke } from "../lib/sketch";
+import { isTap, type SketchAction, type Stroke } from "../lib/sketch";
 
 export type Tool = "pencil" | "eraser";
 export type CanvasSize = { width: number; height: number };
@@ -19,7 +19,11 @@ type Props = {
   disabled?: boolean;
   onAction: (action: SketchAction) => void;
   onResize?: (size: CanvasSize) => void;
+  /** A quick pencil tap goes here first. Returning true means the world used it, so no dot is drawn. */
+  onTap?: (point: Point) => boolean;
 };
+
+type Gesture = { pointerId: number; tool: Tool; start: Point; startedAt: number; moved: number };
 
 function paint(canvas: HTMLCanvasElement, size: CanvasSize, strokes: Stroke[]): void {
   const context = canvas.getContext("2d");
@@ -50,9 +54,9 @@ function paint(canvas: HTMLCanvasElement, size: CanvasSize, strokes: Stroke[]): 
   }
 }
 
-export function SketchPad({ strokes, active, tool, width, disabled = false, onAction, onResize }: Props) {
+export function SketchPad({ strokes, active, tool, width, disabled = false, onAction, onResize, onTap }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gestureRef = useRef<{ pointerId: number; tool: Tool } | null>(null);
+  const gestureRef = useRef<Gesture | null>(null);
   const resizeRef = useRef(onResize);
   const [size, setSize] = useState<CanvasSize | null>(null);
 
@@ -93,13 +97,13 @@ export function SketchPad({ strokes, active, tool, width, disabled = false, onAc
       return;
     }
     event.preventDefault();
-    gestureRef.current = { pointerId: event.pointerId, tool };
+    const point = toPoint(event);
+    gestureRef.current = { pointerId: event.pointerId, tool, start: point, startedAt: event.timeStamp, moved: 0 };
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
     } catch {
       // Capture fails for a pointer the browser no longer tracks. The gesture still works without it.
     }
-    const point = toPoint(event);
     if (tool === "eraser") {
       onAction({ type: "eraseBegin" });
       onAction({ type: "erase", point, radius: ERASER_RADIUS });
@@ -115,6 +119,9 @@ export function SketchPad({ strokes, active, tool, width, disabled = false, onAc
     }
     const coalesced = event.nativeEvent.getCoalescedEvents?.() ?? [];
     const points = (coalesced.length > 0 ? coalesced : [event.nativeEvent]).map(toPoint);
+    for (const [x, y] of points) {
+      gesture.moved = Math.max(gesture.moved, Math.hypot(x - gesture.start[0], y - gesture.start[1]));
+    }
     if (gesture.tool === "eraser") {
       for (const point of points) {
         onAction({ type: "erase", point, radius: ERASER_RADIUS });
@@ -132,9 +139,10 @@ export function SketchPad({ strokes, active, tool, width, disabled = false, onAc
     gestureRef.current = null;
     if (gesture.tool === "eraser") {
       onAction({ type: "eraseEnd" });
-    } else {
-      onAction({ type: cancelled ? "cancel" : "end" });
+      return;
     }
+    const tapped = !cancelled && isTap(gesture.moved, event.timeStamp - gesture.startedAt) && onTap?.(gesture.start);
+    onAction({ type: cancelled || tapped ? "cancel" : "end" });
   }
 
   return (

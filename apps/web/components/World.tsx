@@ -2,10 +2,18 @@
 
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 
+import type { Point } from "../lib/geometry";
+import type { CanvasSize } from "../lib/inference";
 import type { Placement } from "../lib/studio";
+import { toWorldPoint } from "../lib/world/layout";
 import type { Scene } from "../lib/world/scene";
 
-export type WorldHandle = { clear(): void; reset(): void };
+export type WorldHandle = {
+  clear(): void;
+  reset(): void;
+  /** A tap at a sketch-canvas point. True when it landed on a cloud. */
+  tap(point: Point, canvas: CanvasSize): boolean;
+};
 
 type Props = {
   ref?: Ref<WorldHandle>;
@@ -54,6 +62,10 @@ export function World({ ref, placements, paused, speed, onSpawned, onCountChange
       reset() {
         sceneRef.current?.reset();
         onCountChange(0);
+      },
+      tap(point, canvas) {
+        const [x, y] = toWorldPoint(point, canvas);
+        return sceneRef.current?.tap(x, y) ?? false;
       },
     }),
     [onCountChange],

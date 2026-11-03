@@ -6,7 +6,7 @@ export type FirstUse = "sun" | "cloud" | "anything" | "done";
 export const PROMPTS: Record<Exclude<FirstUse, "done">, string> = {
   sun: "Start with a sun.",
   cloud: "Now a cloud for the sky.",
-  anything: "Now anything: a tree, a flower, a car, or a cat.",
+  anything: "Tap the cloud for rain, or draw a tree, a flower, a car, or a cat.",
 };
 
 export const STORAGE_KEY = "doodleverse.firstUse";

@@ -2,7 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import { MAX_POINTS, MAX_STROKES } from "./contract";
 import { boundsOf, distanceToPolyline, type Point } from "./geometry";
-import { EMPTY_SKETCH, pointCount, sketchReducer, type SketchAction, type SketchState } from "./sketch";
+import {
+  EMPTY_SKETCH,
+  isTap,
+  pointCount,
+  sketchReducer,
+  TAP_MOVE,
+  TAP_MS,
+  type SketchAction,
+  type SketchState,
+} from "./sketch";
 
 function run(state: SketchState, ...actions: SketchAction[]): SketchState {
   return actions.reduce(sketchReducer, state);
@@ -107,6 +116,15 @@ describe("eraser", () => {
 
   it("does nothing outside an eraser gesture", () => {
     expect(run(sketch, { type: "erase", point: [40, 10], radius: 4 })).toBe(sketch);
+  });
+});
+
+describe("taps", () => {
+  it("tells a quick, still press from a stroke", () => {
+    expect(isTap(0, 80)).toBe(true);
+    expect(isTap(TAP_MOVE - 1, TAP_MS - 1)).toBe(true);
+    expect(isTap(TAP_MOVE, 80)).toBe(false);
+    expect(isTap(0, TAP_MS)).toBe(false);
   });
 });
 

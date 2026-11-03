@@ -11,14 +11,17 @@ import {
   FLOWER_OPEN,
   INK,
   mixColor,
+  RAIN,
   SHADE_AT_DUSK,
   STROKE,
   SUN_GLOW_TINT,
 } from "./palette";
-import { clearWorld, createWorld, pose, resetWorld, spawn, step, type Entity } from "./sim";
+import { clearWorld, createWorld, pose, rainSpan, resetWorld, spawn, step, tapCloud, type Entity, type World } from "./sim";
 
 export type Scene = {
   spawn(sketch: Sketch): void;
+  /** A tap at world (x, y). True when it hit a cloud and toggled its rain. */
+  tap(x: number, y: number): boolean;
   /** How many entities are in the world. */
   count(): number;
   setPaused(paused: boolean): void;
@@ -123,6 +126,40 @@ function bodyColor(entity: Entity, bloom: number): number {
   return entity.label === "flower" ? mixColor(FLOWER_CLOSED, FLOWER_OPEN, bloom) : 0xffffff;
 }
 
+const DROP_SPACING = 9;
+const DROP_LENGTH = 14;
+const DROP_SPEED = 260;
+
+function fraction(value: number): number {
+  return value - Math.floor(value);
+}
+
+/** Streaks from each raining cloud down to the ground. They fall on world time, so pause stops them. */
+function drawRain(graphics: Graphics, world: World, time: number): void {
+  graphics.clear();
+  let any = false;
+  for (const cloud of world.entities) {
+    const span = rainSpan(cloud);
+    if (!span) {
+      continue;
+    }
+    const now = pose(cloud, world.motion);
+    const top = now.y + (cloud.drawing.height * now.scale) / 4;
+    const fall = GROUND_Y + 20 - top;
+    const drops = Math.max(4, Math.round((span[1] - span[0]) / DROP_SPACING));
+    for (let index = 0; index < drops; index += 1) {
+      const seed = index * 0.6180339887 + cloud.id * 0.1234;
+      const x = span[0] + ((index + 0.5 + 0.3 * (fraction(seed * 7) - 0.5)) / drops) * (span[1] - span[0]);
+      const y = top + ((time * DROP_SPEED * (0.8 + 0.4 * fraction(seed * 3)) + fraction(seed) * fall) % fall);
+      graphics.moveTo(x, y).lineTo(x - 2, Math.min(y + DROP_LENGTH, GROUND_Y + 20));
+      any = true;
+    }
+  }
+  if (any) {
+    graphics.stroke({ width: 2.5, color: RAIN, alpha: 0.65, cap: "round" });
+  }
+}
+
 /**
  * One Pixi app and one ticker for the whole world. Removing entities destroys their display objects;
  * `destroy` also releases the shared textures, the gradients, the ticker callback, and the motion listener.
@@ -146,6 +183,9 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
   const suns = new Container();
   const shaded = new Container();
   shaded.sortableChildren = true;
+  const rain = new Graphics();
+  rain.zIndex = -1;
+  shaded.addChild(rain);
   app.stage.addChild(dusk.graphics, day.graphics, suns, shaded);
   const views = new Map<number, View>();
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -159,6 +199,7 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
     app.stage.scale.set(app.screen.width / WORLD_WIDTH);
     day.graphics.alpha = world.sunlight;
     shaded.tint = mixColor(SHADE_AT_DUSK, 0xffffff, world.sunlight);
+    drawRain(rain, world, world.motion > 0 ? clock.time : 0);
     for (const entity of world.entities) {
       const view = views.get(entity.id);
       if (!view) {
@@ -205,6 +246,13 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       }
       views.set(entity.id, view);
       sync();
+    },
+    tap(x, y) {
+      const hit = tapCloud(world, x, y) !== null;
+      if (hit) {
+        sync();
+      }
+      return hit;
     },
     count() {
       return world.entities.length;

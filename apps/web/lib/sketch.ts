@@ -30,6 +30,14 @@ export const EMPTY_SKETCH: SketchState = { strokes: [], active: null, history: [
 // Points closer than this to the last one change nothing at 28×28 and only make the request bigger.
 export const MIN_STEP = 1.5;
 
+/** A press that moves less than this many pixels and lifts within TAP_MS is a tap, not a stroke. */
+export const TAP_MOVE = 6;
+export const TAP_MS = 350;
+
+export function isTap(moved: number, milliseconds: number): boolean {
+  return moved < TAP_MOVE && milliseconds < TAP_MS;
+}
+
 export function pointCount(strokes: readonly Stroke[]): number {
   return strokes.reduce((total, stroke) => total + stroke.points.length, 0);
 }

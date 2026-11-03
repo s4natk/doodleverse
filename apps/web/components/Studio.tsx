@@ -107,6 +107,7 @@ export function Studio() {
               disabled={locked}
               onAction={onSketch}
               onResize={setCanvasSize}
+              onTap={(point) => (canvasSize ? (worldRef.current?.tap(point, canvasSize) ?? false) : false)}
             />
           </div>
           <FirstUsePrompt step={state.firstUse} />

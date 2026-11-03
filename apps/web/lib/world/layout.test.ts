@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { advance, createClock, MAX_FRAME, MAX_SPEED, MAX_STEPS, STEP } from "./clock";
-import { GROUND_Y, restPosition, restScale, SIZE, toWorld, WORLD_WIDTH, type Sketch } from "./layout";
+import { GROUND_Y, restPosition, restScale, SIZE, toWorld, toWorldPoint, WORLD_WIDTH, type Sketch } from "./layout";
 
 function frames(clock: ReturnType<typeof createClock>, count: number, ms: number): number {
   let steps = 0;
@@ -72,6 +72,11 @@ describe("placing a drawing in the world", () => {
     expect(at).toEqual([240, 140]);
     expect(drawing.strokes[0]).toEqual({ points: [[-40, -40], [40, 40]], width: 16 });
     expect([drawing.width, drawing.height]).toEqual([80, 80]);
+  });
+
+  it("maps a canvas point to the same spot in the world", () => {
+    expect(toWorldPoint([120, 90], SUN.canvas)).toEqual([240, 180]);
+    expect(toWorldPoint([480, 360], SUN.canvas)).toEqual([WORLD_WIDTH, 720]);
   });
 
   it("hangs ground things from the bottom of the drawing", () => {
