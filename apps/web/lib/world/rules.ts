@@ -60,6 +60,30 @@ export const CAR_HOP = 150;
 export const CAR_TILT = 0.0008;
 export const CAR_MAX_TILT = 0.15;
 
+export const CAT_WALK_SPEED = 45;
+export const CAT_FLEE_SPEED = 140;
+/** A cat sits still for CAT_IDLE_MIN to CAT_IDLE_MIN + CAT_IDLE_RANGE seconds between walks. */
+export const CAT_IDLE_MIN = 1.5;
+export const CAT_IDLE_RANGE = 3;
+/** A car closer than this, along the ground, startles a cat. */
+export const CAT_REACT_DISTANCE = 140;
+export const CAT_HOP_SECONDS = 0.35;
+export const CAT_HOP_HEIGHT = 26;
+export const CAT_FLEE_DISTANCE = 220;
+export const CAT_FLEE_SECONDS = 1.6;
+/** After running off, a cat ignores cars for this long. */
+export const CAT_CALM_SECONDS = 2;
+/** A cat's footprint, kept clear of tree trunks. */
+export const CAT_RADIUS = 12;
+/**
+ * A tree's trunk footprint as a fraction of its width, at least TRUNK_MIN. Small enough that a
+ * trunk anywhere on the 80-unit-deep ground still leaves a way round on one side.
+ */
+export const TRUNK_FRACTION = 0.08;
+export const TRUNK_MIN = 8;
+/** How far ahead a walking cat looks for trees in its way. */
+export const CAT_LOOKAHEAD = 90;
+
 /** Gentle rocking, in radians, for things with no behavior of their own. */
 export const SWAY = 0.03;
 export const SWAY_SECONDS = 3;

@@ -209,6 +209,10 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       view.root.position.set(now.x, now.y);
       view.root.scale.set(now.scale * now.mirror, now.scale);
       view.root.rotation = now.rotation;
+      if (entity.label === "cat") {
+        // Cats walk in depth too: nearer the bottom draws in front.
+        view.root.zIndex = entity.y;
+      }
       view.root.tint = mixColor(INK, bodyColor(entity, now.bloom), now.settled);
       if (view.glow) {
         view.glow.alpha = entity.label === "flower" ? 0.8 * now.bloom : now.glow;

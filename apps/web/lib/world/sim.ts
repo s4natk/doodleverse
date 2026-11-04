@@ -1,7 +1,9 @@
 import type { Label } from "../contract";
 import { addCar, carPose, createTraffic, removeCars, stepTraffic, type Traffic } from "./cars";
+import { createCat, hopHeight, stepCat, type CatState, type Surroundings } from "./cats";
 import { STEP } from "./clock";
 import { restPosition, restScale, toWorld, WORLD_WIDTH, type Drawing, type Sketch } from "./layout";
+import { unit } from "./random";
 import {
   BLOOM_LIGHT,
   BLOOM_SECONDS,
@@ -34,6 +36,8 @@ import {
   SWAY_SECONDS,
   TAP_SLOP,
   TREE_GROW_SECONDS,
+  TRUNK_FRACTION,
+  TRUNK_MIN,
   WILT_SECONDS,
 } from "./rules";
 
@@ -70,6 +74,8 @@ export type Entity = {
   bloom: number;
   /** Clouds: whether it is raining. */
   raining: boolean;
+  /** Cats: what it is up to. */
+  cat: CatState | null;
 };
 
 export type Pose = {
@@ -98,12 +104,6 @@ export type World = {
 
 export function createWorld(): World {
   return { entities: [], sunlight: 0, nextId: 1, motion: 1, traffic: createTraffic(STEP) };
-}
-
-// Same id, same number: placement and cycles do not change between runs.
-function unit(id: number, salt: number): number {
-  const value = Math.sin(id * 12.9898 + salt * 78.233) * 43758.5453;
-  return value - Math.floor(value);
 }
 
 export function easeOutCubic(t: number): number {
@@ -139,6 +139,7 @@ export function spawn(world: World, sketch: Sketch): Entity {
     water: 0,
     bloom: 0,
     raining: false,
+    cat: sketch.label === "cat" ? createCat(id) : null,
   };
   world.nextId += 1;
   world.entities.push(entity);
@@ -225,8 +226,24 @@ function grow(world: World, entity: Entity, dt: number): void {
   }
 }
 
+/** What a cat steers around and shies away from: tree trunks and settled cars. */
+function surroundings(world: World): Surroundings {
+  const trees = world.entities
+    .filter((entity) => entity.label === "tree")
+    .map((tree) => ({
+      x: tree.rest.x,
+      y: tree.rest.y,
+      r: Math.max(TRUNK_MIN, tree.drawing.width * tree.rest.scale * TRUNK_FRACTION),
+    }));
+  const cars = world.entities
+    .filter((entity) => entity.label === "car" && world.traffic.cars.has(entity.id))
+    .map((car) => ({ x: car.x, y: car.y }));
+  return { trees, cars, motion: world.motion };
+}
+
 export function step(world: World, dt = STEP): void {
   let suns = 0;
+  let around: Surroundings | undefined;
   for (const entity of world.entities) {
     entity.age += dt;
     if (entity.label === "sun") {
@@ -250,6 +267,10 @@ export function step(world: World, dt = STEP): void {
         speed: entity.speed,
         facing: entity.facing,
       });
+    }
+    if (entity.cat) {
+      around ??= surroundings(world);
+      stepCat(entity.cat, entity, around, dt);
     }
   }
   drive(world, dt);
@@ -301,6 +322,12 @@ function settledPose(entity: Entity, t: number, motion: number): Pose {
     }
     case "car":
       return { ...base, x: entity.x, y: entity.y, rotation: entity.rotation };
+    case "cat": {
+      const cat = entity.cat!;
+      const moving = cat.mood === "idle" ? 0 : 1;
+      const rotation = 0.05 * motion * moving * Math.sin(t * 9 + phase);
+      return { ...base, x: entity.x, y: entity.y - hopHeight(cat, motion), rotation };
+    }
     default:
       return { ...base, rotation: SWAY * motion * Math.sin((2 * Math.PI * t) / SWAY_SECONDS + phase) };
   }
