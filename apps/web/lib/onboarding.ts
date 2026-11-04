@@ -11,10 +11,14 @@ export const PROMPTS: Record<Exclude<FirstUse, "done">, string> = {
 
 export const STORAGE_KEY = "doodleverse.firstUse";
 
-export function nextStep(step: FirstUse, placed: Label): FirstUse {
+/** `earlier` is what was placed before this one, so a cloud drawn first is not asked for again. */
+export function nextStep(step: FirstUse, placed: Label, earlier: readonly Label[] = []): FirstUse {
   switch (step) {
     case "sun":
-      return placed === "sun" ? "cloud" : "sun";
+      if (placed !== "sun") {
+        return "sun";
+      }
+      return earlier.includes("cloud") ? "anything" : "cloud";
     case "cloud":
       return placed === "cloud" ? "anything" : "cloud";
     default:

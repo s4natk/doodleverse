@@ -36,6 +36,8 @@ export type StudioState = {
   nextPlacement: number;
   /** Where the first-use prompt is. Null until it has been read from storage. */
   firstUse: FirstUse | null;
+  /** Labels placed since the prompt last started over. */
+  seen: Label[];
 };
 
 export type StudioEvent =
@@ -58,6 +60,7 @@ export const INITIAL_STUDIO: StudioState = {
   nextRequest: 1,
   nextPlacement: 1,
   firstUse: null,
+  seen: [],
 };
 
 const DRAWING: Flow = { kind: "drawing" };
@@ -88,7 +91,8 @@ function place(state: StudioState, label: Label, picked: boolean): StudioState {
     flow: DRAWING,
     placed: [...state.placed, placement],
     nextPlacement: state.nextPlacement + 1,
-    firstUse: state.firstUse === null ? null : nextStep(state.firstUse, label),
+    firstUse: state.firstUse === null ? null : nextStep(state.firstUse, label, state.seen),
+    seen: state.seen.includes(label) ? state.seen : [...state.seen, label],
   };
 }
 
@@ -143,6 +147,9 @@ export function studioReducer(state: StudioState, event: StudioEvent): StudioSta
       return placed.length === state.placed.length ? state : { ...state, placed };
     }
     case "firstUse":
+      if (event.step === "sun") {
+        return { ...state, firstUse: event.step, seen: [] };
+      }
       return state.firstUse === event.step ? state : { ...state, firstUse: event.step };
   }
 }

@@ -98,6 +98,14 @@ describe("confirm and pick", () => {
     const asked = run(suggested, { type: "firstUse", step: "sun" });
     expect(run(asked, { type: "confirm" }).firstUse).toBe("cloud");
     expect(run(asked, { type: "pick", label: "cat" }).firstUse).toBe("sun");
+
+    const cloudFirst = run(asked, { type: "pick", label: "cloud" }, ...LINE, { type: "recognize", canvas: CANVAS });
+    const sunNext = run(cloudFirst, {
+      type: "resolved",
+      requestId: requestId(cloudFirst),
+      prediction: prediction(false),
+    });
+    expect(run(sunNext, { type: "confirm" }).firstUse).toBe("anything");
   });
 
   it("any of the six can be picked, including ones outside the top three", () => {

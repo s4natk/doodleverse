@@ -26,6 +26,11 @@ describe("first-use prompt", () => {
     expect(nextStep("done", "sun")).toBe("done");
   });
 
+  it("does not ask for a cloud that is already there", () => {
+    expect(nextStep("sun", "sun", ["cloud", "tree"])).toBe("anything");
+    expect(nextStep("sun", "sun", ["tree"])).toBe("cloud");
+  });
+
   it("remembers only that it finished", () => {
     const storage = memory();
     expect(readStep(storage)).toBe("sun");
