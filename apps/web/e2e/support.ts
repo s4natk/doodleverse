@@ -1,5 +1,7 @@
 import { expect, type Page, type Route } from "@playwright/test";
 
+import { WORLD_HEIGHT, WORLD_WIDTH } from "../lib/world/layout";
+
 export type Point = [number, number];
 export type Stroke = Point[];
 
@@ -131,4 +133,33 @@ export async function confirm(page: Page, label: string, strokes: Stroke[]): Pro
   const yes = page.getByRole("button", { name: `Yes, it's a ${label}` });
   await expect(yes).toBeVisible();
   await yes.click();
+}
+
+export type WorldStats = {
+  entities: number;
+  views: number;
+  displayObjects: number;
+  bodies: number;
+  tickerListeners: number;
+  physicsListeners: number;
+  motionListeners: number;
+  raining: number;
+  clouds: { x: number; y: number; raining: boolean }[];
+};
+
+type WorldProbe = { stats(): WorldStats; destroy(): void };
+
+/** The world's own counts, from the hook an E2E build exposes. */
+export async function worldStats(page: Page): Promise<WorldStats> {
+  await page.waitForFunction(() => "__doodleverseWorld" in window);
+  return page.evaluate(() => (window as unknown as { __doodleverseWorld: WorldProbe }).__doodleverseWorld.stats());
+}
+
+/** A click at a world-space point, through the sketch layer that sits over it. */
+export async function tapWorld(page: Page, [x, y]: Point): Promise<void> {
+  const box = await page.getByLabel("Drawing area").boundingBox();
+  if (!box) {
+    throw new Error("The drawing area is not on screen.");
+  }
+  await page.mouse.click(box.x + (x / WORLD_WIDTH) * box.width, box.y + (y / WORLD_HEIGHT) * box.height);
 }
