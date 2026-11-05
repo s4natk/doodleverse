@@ -1,4 +1,4 @@
-import type { Page, Route } from "@playwright/test";
+import { expect, type Page, type Route } from "@playwright/test";
 
 export type Point = [number, number];
 export type Stroke = Point[];
@@ -123,3 +123,12 @@ export const shapes = {
     return [[[x, y], [x + 60, y + 20], [x + 120, y]]];
   },
 };
+
+/** Draw, ask, and accept the mock's top guess. */
+export async function confirm(page: Page, label: string, strokes: Stroke[]): Promise<void> {
+  await draw(page, strokes);
+  await page.getByRole("button", { name: "Recognize" }).click();
+  const yes = page.getByRole("button", { name: `Yes, it's a ${label}` });
+  await expect(yes).toBeVisible();
+  await yes.click();
+}
