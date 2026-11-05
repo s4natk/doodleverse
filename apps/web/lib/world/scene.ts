@@ -16,7 +16,20 @@ import {
   STROKE,
   SUN_GLOW_TINT,
 } from "./palette";
+import { bodyCount, destroyTraffic, physicsListeners } from "./cars";
 import { clearWorld, createWorld, pose, rainSpan, resetWorld, spawn, step, tapCloud, type Entity, type World } from "./sim";
+
+export type WorldStats = {
+  entities: number;
+  views: number;
+  displayObjects: number;
+  bodies: number;
+  tickerListeners: number;
+  physicsListeners: number;
+  motionListeners: number;
+  raining: number;
+  clouds: { x: number; y: number; raining: boolean }[];
+};
 
 export type Scene = {
   spawn(sketch: Sketch): void;
@@ -24,12 +37,39 @@ export type Scene = {
   tap(x: number, y: number): boolean;
   /** How many entities are in the world. */
   count(): number;
+  stats(): WorldStats;
   setPaused(paused: boolean): void;
   setSpeed(speed: number): void;
   clear(): void;
   reset(): void;
   destroy(): void;
 };
+
+declare global {
+  interface Window {
+    __doodleverseWorld?: Pick<Scene, "stats" | "destroy">;
+  }
+}
+
+const EMPTY_STATS: WorldStats = {
+  entities: 0,
+  views: 0,
+  displayObjects: 0,
+  bodies: 0,
+  tickerListeners: 0,
+  physicsListeners: 0,
+  motionListeners: 0,
+  raining: 0,
+  clouds: [],
+};
+
+function countDisplay(node: { children: readonly { children: readonly unknown[] }[] }): number {
+  let total = 1;
+  for (const child of node.children) {
+    total += countDisplay(child as { children: readonly { children: readonly unknown[] }[] });
+  }
+  return total;
+}
 
 type View = { root: Container; glow: Sprite | null };
 
@@ -162,7 +202,8 @@ function drawRain(graphics: Graphics, world: World, time: number): void {
 
 /**
  * One Pixi app and one ticker for the whole world. Removing entities destroys their display objects;
- * `destroy` also releases the shared textures, the gradients, the ticker callback, and the motion listener.
+ * `destroy` also releases the shared textures, the gradients, the ticker callback, the motion listener,
+ * and the Matter collision callback.
  */
 export async function createScene(host: HTMLElement): Promise<Scene> {
   const app = new Application();
@@ -189,6 +230,8 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
   app.stage.addChild(dusk.graphics, day.graphics, suns, shaded);
   const views = new Map<number, View>();
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let motionListening = 1;
+  let alive = true;
   const applyMotion = () => {
     world.motion = reducedMotion.matches ? 0 : 1;
   };
@@ -238,7 +281,29 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
   app.ticker.add(tick);
   sync();
 
-  return {
+  function stats(): WorldStats {
+    if (!alive) {
+      return EMPTY_STATS;
+    }
+    return {
+      entities: world.entities.length,
+      views: views.size,
+      displayObjects: countDisplay(app.stage),
+      bodies: bodyCount(world.traffic),
+      tickerListeners: app.ticker.count,
+      physicsListeners: physicsListeners(world.traffic.engine),
+      motionListeners: motionListening,
+      raining: world.entities.filter((entity) => entity.raining).length,
+      clouds: world.entities
+        .filter((entity) => entity.label === "cloud")
+        .map((cloud) => {
+          const now = pose(cloud, world.motion);
+          return { x: now.x, y: now.y, raining: cloud.raining };
+        }),
+    };
+  }
+
+  const scene: Scene = {
     spawn(sketch) {
       const entity = spawn(world, sketch);
       const view = buildView(entity, glow);
@@ -261,6 +326,7 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
     count() {
       return world.entities.length;
     },
+    stats,
     setPaused(paused) {
       clock.paused = paused;
     },
@@ -279,14 +345,24 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       sync();
     },
     destroy() {
+      if (!alive) {
+        return;
+      }
+      alive = false;
       app.ticker.remove(tick);
       reducedMotion.removeEventListener("change", applyMotion);
+      motionListening = 0;
       removeViews();
       clearWorld(world);
+      destroyTraffic(world.traffic);
       glow.destroy(true);
       dusk.gradient.destroy();
       day.gradient.destroy();
       app.destroy({ removeView: true }, { children: true });
     },
   };
+  if (process.env.NEXT_PUBLIC_E2E === "1") {
+    window.__doodleverseWorld = scene;
+  }
+  return scene;
 }

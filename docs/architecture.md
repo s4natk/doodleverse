@@ -25,6 +25,6 @@ One PixiJS ticker runs the world. Each frame hands its elapsed time to a fixed-t
 - Car: a Matter.js body on a shared road line. It holds its own speed, hops and turns away when it hits a wall or another car.
 - Cat: sits, then wanders to a spot on the ground, bending in depth around tree trunks. A car close by makes it hop and run the other way.
 
-A quick pencil tap that lands on a cloud goes to the world instead of drawing a dot. Removing an entity destroys its display objects and its physics body. Tearing the scene down also removes the ticker callback, the shared glow texture, the sky gradients, and the reduced-motion listener. With reduced motion requested, nothing pulses, bobs, sways, drifts, drives, or walks. Trees still grow and flowers still open.
+A quick pencil tap that lands on a cloud goes to the world instead of drawing a dot. Removing an entity destroys its display objects and its physics body. Tearing the scene down also removes the ticker callback, the shared glow texture, the sky gradients, the reduced-motion listener, and the Matter collision callback. With reduced motion requested, nothing pulses, bobs, sways, drifts, drives, or walks. Trees still grow and flowers still open.
 
 A frozen model is `model.keras` plus `sidecar.json`. The sidecar holds the label order, the input contract, the rasterizer settings, and the gate thresholds, so whatever serves the model reads them from there instead of repeating them.

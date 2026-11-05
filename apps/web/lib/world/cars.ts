@@ -79,6 +79,29 @@ export function removeCars(traffic: Traffic): void {
   traffic.byBody.clear();
 }
 
+/** How many Matter callbacks are still hanging off the engine. */
+export function physicsListeners(engine: Matter.Engine): number {
+  const events = (engine as Matter.Engine & { events?: Record<string, unknown[] | undefined> }).events;
+  if (!events) {
+    return 0;
+  }
+  return Object.values(events).reduce((sum, list) => sum + (Array.isArray(list) ? list.length : 0), 0);
+}
+
+/** Every body in the world, including the road and the walls. */
+export function bodyCount(traffic: Traffic): number {
+  return Composite.allBodies(traffic.engine.world).length;
+}
+
+/** Drop the cars, the statics, and the collision callback. The engine is not reused after this. */
+export function destroyTraffic(traffic: Traffic): void {
+  Events.off(traffic.engine, "collisionStart");
+  Composite.clear(traffic.engine.world, false);
+  traffic.cars.clear();
+  traffic.byBody.clear();
+  Engine.clear(traffic.engine);
+}
+
 /** Hold every car at its cruising speed, then let Matter move them and sort out the bumps. */
 export function stepTraffic(traffic: Traffic, step: number, motion: number): void {
   for (const car of traffic.cars.values()) {
