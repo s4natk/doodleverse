@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "e2e": "playwright test",
+    "bench": "playwright test --config playwright.bench.config.ts --headed",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {

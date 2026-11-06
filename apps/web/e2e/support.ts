@@ -121,6 +121,22 @@ export const shapes = {
       ring(x + 85, y + 8, 11, 16),
     ];
   },
+  flower(x: number, base: number): Stroke[] {
+    const petals = Array.from({ length: 6 }, (_, k): Stroke => {
+      const angle = (2 * Math.PI * k) / 6;
+      return ring(x + 16 * Math.cos(angle), base - 70 + 16 * Math.sin(angle), 10, 12);
+    });
+    return [[[x, base], [x, base - 55]], ring(x, base - 70, 9, 12), ...petals];
+  },
+  cat(x: number, base: number): Stroke[] {
+    return [
+      ring(x, base - 24, 24),
+      ring(x + 30, base - 58, 16),
+      [[x + 18, base - 68], [x + 20, base - 84], [x + 28, base - 73]],
+      [[x + 34, base - 73], [x + 42, base - 84], [x + 44, base - 66]],
+      [[x - 24, base - 24], [x - 40, base - 44], [x - 36, base - 62]],
+    ];
+  },
   line(x: number, y: number): Stroke[] {
     return [[[x, y], [x + 60, y + 20], [x + 120, y]]];
   },
@@ -136,6 +152,7 @@ export async function confirm(page: Page, label: string, strokes: Stroke[]): Pro
 }
 
 export type WorldStats = {
+  renderer: string;
   entities: number;
   views: number;
   displayObjects: number;

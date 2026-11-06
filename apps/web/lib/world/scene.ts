@@ -20,6 +20,8 @@ import { bodyCount, destroyTraffic, physicsListeners } from "./cars";
 import { clearWorld, createWorld, pose, rainSpan, resetWorld, spawn, step, tapCloud, type Entity, type World } from "./sim";
 
 export type WorldStats = {
+  /** Which Pixi renderer the browser got: "webgl" or "webgpu". */
+  renderer: string;
   entities: number;
   views: number;
   displayObjects: number;
@@ -47,11 +49,12 @@ export type Scene = {
 
 declare global {
   interface Window {
-    __doodleverseWorld?: Pick<Scene, "stats" | "destroy">;
+    __doodleverseWorld?: Scene;
   }
 }
 
 const EMPTY_STATS: WorldStats = {
+  renderer: "",
   entities: 0,
   views: 0,
   displayObjects: 0,
@@ -286,6 +289,7 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       return EMPTY_STATS;
     }
     return {
+      renderer: app.renderer.name,
       entities: world.entities.length,
       views: views.size,
       displayObjects: countDisplay(app.stage),
