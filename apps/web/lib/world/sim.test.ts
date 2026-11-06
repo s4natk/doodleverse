@@ -19,6 +19,7 @@ import {
   TREE_GROW_SECONDS,
   WILT_SECONDS,
 } from "./rules";
+import { physicsListeners } from "./cars";
 import { clearWorld, createWorld, pose, rainSpan, resetWorld, spawn, step, tapCloud, type World } from "./sim";
 
 function sketch(label: Label, minX = 100, minY = 100, size = 60): Sketch {
@@ -301,8 +302,10 @@ describe("car", () => {
     car(world, 300, 1);
     run(world, 1);
     expect(world.traffic.engine.world.bodies.length).toBe(4);
+    expect(physicsListeners(world.traffic.engine)).toBe(1);
     clearWorld(world);
     expect(world.traffic.engine.world.bodies.length).toBe(3);
+    expect(physicsListeners(world.traffic.engine)).toBe(1);
 
     const still = createWorld();
     still.motion = 0;

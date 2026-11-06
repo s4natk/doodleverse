@@ -10,9 +10,7 @@ test("tapping a settled cloud starts rain, and reset puts the walkthrough back",
   await confirm(page, "cloud", shapes.cloud(380, 100));
   await expect(page.getByText("2 things in the world")).toBeVisible();
 
-  await expect.poll(async () => (await worldStats(page)).clouds.length).toBe(1);
-  // Rain only toggles after the 0.6 s settle.
-  await page.waitForTimeout(1000);
+  await expect.poll(async () => (await worldStats(page)).clouds[0]?.settled === true).toBe(true);
   const cloud = (await worldStats(page)).clouds[0];
   await tapWorld(page, [cloud.x, cloud.y]);
   await expect.poll(async () => (await worldStats(page)).raining).toBe(1);

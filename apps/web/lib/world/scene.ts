@@ -28,7 +28,7 @@ export type WorldStats = {
   physicsListeners: number;
   motionListeners: number;
   raining: number;
-  clouds: { x: number; y: number; raining: boolean }[];
+  clouds: { x: number; y: number; raining: boolean; settled: boolean }[];
 };
 
 export type Scene = {
@@ -298,7 +298,7 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
         .filter((entity) => entity.label === "cloud")
         .map((cloud) => {
           const now = pose(cloud, world.motion);
-          return { x: now.x, y: now.y, raining: cloud.raining };
+          return { x: now.x, y: now.y, raining: cloud.raining, settled: now.settled >= 1 };
         }),
     };
   }

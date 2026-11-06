@@ -144,7 +144,7 @@ export type WorldStats = {
   physicsListeners: number;
   motionListeners: number;
   raining: number;
-  clouds: { x: number; y: number; raining: boolean }[];
+  clouds: { x: number; y: number; raining: boolean; settled: boolean }[];
 };
 
 type WorldProbe = { stats(): WorldStats; destroy(): void };

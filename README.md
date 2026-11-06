@@ -27,6 +27,8 @@ cd apps/web
 npm ci
 npm run dev                  # talks to the API on :8000; NEXT_PUBLIC_MOCK_INFERENCE=1 fakes it instead
 npm test && npm run lint
+npx playwright install chromium
+npm run e2e                  # draw / recognize / confirm / rain / reset against a mocked /predict
 ```
 
 Or both in Docker, once `artifacts/model` exists:
