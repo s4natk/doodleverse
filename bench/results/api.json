@@ -1,0 +1,136 @@
+{
+  "benchmark": "api",
+  "date": "2026-11-06",
+  "git": {
+    "commit": "7db24ebadb17be27c01155b4fb6c7ae6eeeea2be",
+    "dirty": false
+  },
+  "machine": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "cpu": "AMD Ryzen 9 7945HX with Radeon Graphics",
+    "logical_cpus": 32,
+    "memory_gib": 31.7
+  },
+  "versions": {
+    "python": "3.12.3",
+    "tensorflow": "2.21.0",
+    "keras": "3.15.1",
+    "numpy": "2.5.4",
+    "opencv-python-headless": "4.14.0.94",
+    "fastapi": "0.146.0",
+    "uvicorn": "0.54.0",
+    "pydantic": "2.14.1",
+    "httpx": "0.28.1"
+  },
+  "model": {
+    "path": "artifacts/model/model.keras",
+    "bytes": 433944,
+    "sidecar_bytes": 3044,
+    "version": "gap-1ce366c1a170",
+    "parameters": 94118
+  },
+  "sketches": [
+    {
+      "name": "sun",
+      "strokes": 9,
+      "points": 249
+    },
+    {
+      "name": "cloud",
+      "strokes": 1,
+      "points": 253
+    },
+    {
+      "name": "tree",
+      "strokes": 3,
+      "points": 231
+    },
+    {
+      "name": "car",
+      "strokes": 3,
+      "points": 367
+    }
+  ],
+  "load": {
+    "runs": 3,
+    "import_s": {
+      "median": 3.127,
+      "all": [
+        4.633,
+        3.105,
+        3.127
+      ]
+    },
+    "load_s": {
+      "median": 0.165,
+      "all": [
+        0.267,
+        0.165,
+        0.156
+      ]
+    },
+    "first_predict_ms": {
+      "median": 3.137,
+      "all": [
+        7.702,
+        3.137,
+        2.604
+      ]
+    }
+  },
+  "local": {
+    "server": "uvicorn, one process, 127.0.0.1",
+    "ready_s": 4.058,
+    "load_ms_logged": 3212.0,
+    "warmup": 30,
+    "requests": 300,
+    "round_trip_ms": {
+      "p50": 3.052,
+      "p95": 4.091,
+      "mean": 3.179,
+      "max": 4.736
+    },
+    "predictor_ms": {
+      "p50": 1.886,
+      "p95": 2.448,
+      "mean": 1.996,
+      "max": 2.997
+    }
+  },
+  "container": {
+    "engine": {
+      "docker": "29.4.3",
+      "os": "Docker Desktop",
+      "kernel": "6.6.87.2-microsoft-standard-WSL2",
+      "cpus": 32,
+      "memory_gib": 15.5,
+      "image_store": "containerd"
+    },
+    "image": {
+      "name": "doodleverse-inference",
+      "disk_usage_bytes": 2380000000,
+      "content_bytes": 467722877
+    },
+    "ready_s": 3.78,
+    "load_ms_logged": 2177.0,
+    "warmup": 30,
+    "requests": 300,
+    "round_trip_ms": {
+      "p50": 4.492,
+      "p95": 5.375,
+      "mean": 4.608,
+      "max": 7.424
+    },
+    "predictor_ms": {
+      "p50": 2.55,
+      "p95": 3.021,
+      "mean": 2.635,
+      "max": 4.828
+    },
+    "memory_bytes": {
+      "after_start": 232469299,
+      "after_requests": 233517875,
+      "cgroup_peak": 250814464
+    }
+  }
+}

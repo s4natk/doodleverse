@@ -1,0 +1,75 @@
+{
+  "benchmark": "fps",
+  "date": "2026-11-06",
+  "git": {
+    "commit": "7db24ebadb17be27c01155b4fb6c7ae6eeeea2be",
+    "dirty": false
+  },
+  "machine": {
+    "os": "Windows 11 Home 10.0.26300",
+    "cpu": "AMD Ryzen 9 7945HX with Radeon Graphics",
+    "logical_cpus": 32,
+    "memory_gib": 31.7
+  },
+  "browser": {
+    "name": "chromium",
+    "version": "156.0.8078.4",
+    "headless": false,
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "renderer": "webgl"
+  },
+  "page": {
+    "viewport": [
+      1280,
+      900
+    ],
+    "device_pixel_ratio": 1,
+    "world_canvas": [
+      652,
+      489
+    ],
+    "reduced_motion": false
+  },
+  "versions": {
+    "node": "24.22.0",
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "pixi.js": "8.22.0",
+    "matter-js": "0.20.0",
+    "@playwright/test": "1.64.1"
+  },
+  "method": "3 s to settle, then 10 s of requestAnimationFrame timestamps. Entities are spawned through the scene, not drawn, and every cloud is raining.",
+  "runs": [
+    {
+      "entities": 0,
+      "seconds": 10,
+      "frames": 1650,
+      "fps": 164.997,
+      "frame_ms": {
+        "p50": 6.1,
+        "p95": 6.2,
+        "mean": 6.061,
+        "max": 6.5
+      },
+      "main_thread_busy": 0.032,
+      "script_busy": 0.012
+    },
+    {
+      "entities": 24,
+      "per_class": 4,
+      "raining_clouds": 4,
+      "physics_bodies": 7,
+      "seconds": 10,
+      "frames": 1650,
+      "fps": 164.998,
+      "frame_ms": {
+        "p50": 6.1,
+        "p95": 6.2,
+        "mean": 6.061,
+        "max": 6.3
+      },
+      "main_thread_busy": 0.104,
+      "script_busy": 0.083
+    }
+  ]
+}

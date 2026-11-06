@@ -37,4 +37,11 @@ Or both in Docker, once `artifacts/model` exists:
 docker compose -f infra/docker-compose.yml up --build
 ```
 
+Benchmarks write JSON to [bench/results](bench/results), with the machine and versions next to the numbers:
+
+```bash
+python -m bench.api --container   # model load, warm /predict p50 and p95, container memory and image size
+cd apps/web && npm run bench      # frame rate in headed Chromium, empty and with 24 entities
+```
+
 Results are in [docs/experiments.md](docs/experiments.md). The test split has been scored once, and [ml/splits/v1.test-scored.json](ml/splits/v1.test-scored.json) keeps it that way. The service contract is in [docs/api.md](docs/api.md).
