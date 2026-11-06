@@ -7,9 +7,11 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+  // A CI runner draws the world in software. Two browsers at once starve each other's pointer events.
+  workers: process.env.CI ? 1 : undefined,
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
+  reporter: process.env.CI ? [["github"], ["list"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: "retain-on-failure",

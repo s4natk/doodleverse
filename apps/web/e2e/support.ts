@@ -63,7 +63,7 @@ export async function serve(page: Page, reply: (body: unknown, index: number) =>
   return received;
 }
 
-/** Draw strokes on the sketch layer with the real mouse, in canvas pixels. */
+/** Draw strokes on the sketch layer with the real mouse, in canvas pixels. One move per point. */
 export async function draw(page: Page, strokes: Stroke[]): Promise<void> {
   const box = await page.getByLabel("Drawing area").boundingBox();
   if (!box) {
@@ -74,7 +74,7 @@ export async function draw(page: Page, strokes: Stroke[]): Promise<void> {
     await page.mouse.move(box.x + first[0], box.y + first[1]);
     await page.mouse.down();
     for (const [x, y] of rest) {
-      await page.mouse.move(box.x + x, box.y + y, { steps: 2 });
+      await page.mouse.move(box.x + x, box.y + y);
     }
     await page.mouse.up();
   }
