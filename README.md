@@ -44,4 +44,6 @@ python -m bench.api --container   # model load, warm /predict p50 and p95, conta
 cd apps/web && npm run bench      # frame rate in headed Chromium, empty and with 24 entities
 ```
 
+[CI](.github/workflows/ci.yml) runs ruff, pytest, the typecheck, ESLint, Vitest, Playwright against a mocked `/predict`, and both image builds. It does not train.
+
 Results are in [docs/experiments.md](docs/experiments.md). The test split has been scored once, and [ml/splits/v1.test-scored.json](ml/splits/v1.test-scored.json) keeps it that way. The service contract is in [docs/api.md](docs/api.md).
