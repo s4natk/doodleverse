@@ -19,8 +19,8 @@ The browser sends strokes, not pixels. A FastAPI service rasterizes them with th
 - Test split, scored once after the model, the gate, and the rasterizer were frozen: 0.950 accuracy and 0.950 macro-F1 over 3,600 drawings. Logistic regression on the same pixels reached 0.831 validation macro-F1.
 - The uncertainty gate answers 86.8% of test drawings without asking, and 0.991 of those answers are right.
 - On 3,000 held-back drawings, strokes through this project's rasterizer score 0.947, against 0.949 for Google's own bitmaps of the same strokes.
-- Warm `/predict`: 3.10 ms p50 on a local server, 26.18 ms p50 to the deployed API from the same laptop.
-- 165 fps with 24 entities in headed Chromium, with the main thread 9.0% busy.
+- Warm `/predict`: 3.89 ms p50 on a local server, 26.69 ms p50 to the deployed API from the same laptop.
+- 165 fps with 24 entities in headed Chromium, with the main thread 11.0% busy.
 
 More in the [model card](docs/model-card.md), [experiments](docs/experiments.md), [benchmarks](docs/benchmark-results.md), and [API](docs/api.md).
 

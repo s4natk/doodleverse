@@ -1,7 +1,7 @@
 {
   "benchmark": "api",
   "git": {
-    "commit": "f3d644e10fa5589938b0cb2bad7cb69c45cce61d",
+    "commit": "1becb5ff41b3d53b077a86200c2d34ef10da9338",
     "dirty": false
   },
   "machine": {
@@ -57,47 +57,47 @@
   "load": {
     "runs": 3,
     "import_s": {
-      "median": 3.186,
+      "median": 3.415,
       "all": [
-        3.426,
-        3.186,
-        3.159
+        5.472,
+        3.415,
+        3.282
       ]
     },
     "load_s": {
-      "median": 0.171,
+      "median": 0.203,
       "all": [
-        0.169,
-        0.171,
-        0.173
+        0.325,
+        0.196,
+        0.203
       ]
     },
     "first_predict_ms": {
-      "median": 2.801,
+      "median": 3.201,
       "all": [
-        2.82,
-        2.543,
-        2.801
+        8.994,
+        3.201,
+        3.158
       ]
     }
   },
   "local": {
     "server": "uvicorn, one process, 127.0.0.1",
-    "ready_s": 4.164,
-    "load_ms_logged": 3290.0,
+    "ready_s": 4.298,
+    "load_ms_logged": 3591.0,
     "warmup": 30,
     "requests": 300,
     "round_trip_ms": {
-      "p50": 3.102,
-      "p95": 3.757,
-      "mean": 3.242,
-      "max": 4.538
+      "p50": 3.888,
+      "p95": 4.92,
+      "mean": 3.923,
+      "max": 5.419
     },
     "predictor_ms": {
-      "p50": 1.936,
-      "p95": 2.442,
-      "mean": 2.035,
-      "max": 2.566
+      "p50": 2.307,
+      "p95": 2.984,
+      "mean": 2.369,
+      "max": 3.316
     }
   },
   "container": {
@@ -112,28 +112,28 @@
     "image": {
       "name": "doodleverse-inference",
       "disk_usage_bytes": 2440000000,
-      "content_bytes": 485132909
+      "content_bytes": 485141684
     },
-    "ready_s": 3.678,
-    "load_ms_logged": 1978.0,
+    "ready_s": 6.049,
+    "load_ms_logged": 3535.0,
     "warmup": 30,
     "requests": 300,
     "round_trip_ms": {
-      "p50": 4.48,
-      "p95": 5.091,
-      "mean": 4.558,
-      "max": 6.687
+      "p50": 5.294,
+      "p95": 6.187,
+      "mean": 5.344,
+      "max": 7.59
     },
     "predictor_ms": {
-      "p50": 2.739,
-      "p95": 3.242,
-      "mean": 2.824,
-      "max": 3.622
+      "p50": 2.84,
+      "p95": 3.341,
+      "mean": 2.907,
+      "max": 4.107
     },
     "memory_bytes": {
-      "after_start": 231420723,
-      "after_requests": 235300454,
-      "cgroup_peak": 259944448
+      "after_start": 240857907,
+      "after_requests": 245366784,
+      "cgroup_peak": 752713728
     }
   },
   "remote": {
@@ -143,16 +143,16 @@
     "warmup": 30,
     "requests": 300,
     "round_trip_ms": {
-      "p50": 26.181,
-      "p95": 27.16,
-      "mean": 26.413,
-      "max": 40.136
+      "p50": 26.69,
+      "p95": 28.706,
+      "mean": 27.657,
+      "max": 251.79
     },
     "predictor_ms": {
-      "p50": 3.458,
-      "p95": 4.206,
-      "mean": 3.678,
-      "max": 17.182
+      "p50": 3.646,
+      "p95": 4.616,
+      "mean": 3.809,
+      "max": 7.304
     }
   }
 }
