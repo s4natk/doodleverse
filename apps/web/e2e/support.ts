@@ -66,6 +66,15 @@ export async function serve(page: Page, reply: (body: unknown, index: number) =>
 /** The drawing area's box with all of it on screen. A mouse event outside the viewport never reaches the canvas. */
 export async function drawingArea(page: Page): Promise<{ x: number; y: number; width: number; height: number }> {
   const area = page.getByLabel("Drawing area");
+  // The page draws itself in on load and pops the sketchbook into place. Measure once that has settled.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  );
   // Instant, not the page's smooth scroll: a box read mid-scroll would put the strokes in the wrong place.
   await area.evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
   const box = await area.boundingBox();

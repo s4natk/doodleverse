@@ -7,7 +7,7 @@ test("a mocked /predict names a drawing, and confirming it puts it in the world"
     body: answer(["sun", "cloud"][index] ?? "tree"),
   }));
 
-  await page.goto("/");
+  await page.goto("/draw");
   await expect(page.getByText("Start with a sun.")).toBeVisible();
   await expect(page.getByText("0 things in the world")).toBeVisible();
 
@@ -31,7 +31,7 @@ test("a mocked /predict names a drawing, and confirming it puts it in the world"
 test("a down recognizer shows the error and lets the person retry", async ({ page }) => {
   await serve(page, (_body, index) => (index === 0 ? "offline" : { body: answer("sun") }));
 
-  await page.goto("/");
+  await page.goto("/draw");
   await draw(page, shapes.sun(220, 120));
   await page.getByRole("button", { name: "Recognize" }).click();
   await expect(page.getByText("That didn't work.")).toBeVisible();

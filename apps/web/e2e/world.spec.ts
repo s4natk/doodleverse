@@ -5,7 +5,7 @@ import { answer, confirm, serve, shapes, tapWorld, worldStats } from "./support"
 test("tapping a settled cloud starts rain, and reset puts the walkthrough back", async ({ page }) => {
   await serve(page, (_body, index) => ({ body: answer(["sun", "cloud"][index] ?? "tree") }));
 
-  await page.goto("/");
+  await page.goto("/draw");
   await confirm(page, "sun", shapes.sun(220, 120));
   await confirm(page, "cloud", shapes.cloud(380, 100));
   await expect(page.getByText("2 things in the world")).toBeVisible();
@@ -26,7 +26,7 @@ test("clear and reset return bodies, views, and listeners to the empty world's c
     body: answer(["sun", "cloud", "car", "sun"][index] ?? "sun"),
   }));
 
-  await page.goto("/");
+  await page.goto("/draw");
   const idle = await worldStats(page);
   expect(idle).toMatchObject({
     entities: 0,

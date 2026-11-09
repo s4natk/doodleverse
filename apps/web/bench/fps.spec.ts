@@ -134,7 +134,7 @@ function installed(name: string): string {
 }
 
 test("frames per second, empty and with four of each class", async ({ page, browser, browserName }) => {
-  await page.goto("/");
+  await page.goto("/draw");
   await page.waitForFunction(() => window.__doodleverseWorld !== undefined);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Performance.enable");
