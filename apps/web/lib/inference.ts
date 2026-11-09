@@ -126,16 +126,24 @@ export function httpRecognizer(baseUrl: string, fetchImpl: typeof fetch = fetch,
 
 type RecognizerEnv = { nodeEnv?: string; mock?: string; apiUrl?: string };
 
+const BUILD_ENV: RecognizerEnv = {
+  nodeEnv: process.env.NODE_ENV,
+  mock: process.env.NEXT_PUBLIC_MOCK_INFERENCE,
+  apiUrl: process.env.NEXT_PUBLIC_API_URL,
+};
+
+export function apiBaseUrl(env: RecognizerEnv = BUILD_ENV): string {
+  return env.apiUrl || DEFAULT_API_URL;
+}
+
+export function isMocked(env: RecognizerEnv = BUILD_ENV): boolean {
+  return env.nodeEnv !== "production" && env.mock === "1";
+}
+
 /** The real API, or the mock when NEXT_PUBLIC_MOCK_INFERENCE=1 outside a production build. */
-export function pickRecognizer(
-  env: RecognizerEnv = {
-    nodeEnv: process.env.NODE_ENV,
-    mock: process.env.NEXT_PUBLIC_MOCK_INFERENCE,
-    apiUrl: process.env.NEXT_PUBLIC_API_URL,
-  },
-): { recognize: Recognizer; mocked: boolean } {
-  if (env.nodeEnv !== "production" && env.mock === "1") {
+export function pickRecognizer(env: RecognizerEnv = BUILD_ENV): { recognize: Recognizer; mocked: boolean } {
+  if (isMocked(env)) {
     return { recognize: mockRecognizer, mocked: true };
   }
-  return { recognize: httpRecognizer(env.apiUrl || DEFAULT_API_URL), mocked: false };
+  return { recognize: httpRecognizer(apiBaseUrl(env)), mocked: false };
 }
