@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 BASE_STACK = "doodleverse-base"
 SERVICE_STACK = "doodleverse-api"
+# A new account has none of these until something first creates them, and Express Mode needs all three.
+SERVICE_LINKED = ("ecs.amazonaws.com", "elasticloadbalancing.amazonaws.com", "ecs.application-autoscaling.amazonaws.com")
 
 
 def run(
@@ -52,7 +54,23 @@ def failed_events(stack: str) -> list[str]:
     ]
 
 
+def ensure_service_linked_roles() -> None:
+    for service in SERVICE_LINKED:
+        created = run("aws", "iam", "create-service-linked-role", "--aws-service-name", service, check=False)
+        if created.returncode == 0:
+            print(f"service-linked role for {service}: created", flush=True)
+        elif "has been taken" not in created.stderr:
+            raise RuntimeError(f"No service-linked role for {service}:\n{created.stderr.strip()}")
+
+
 def deploy_stack(name: str, template: str, **parameters: str) -> dict:
+    status = run("aws", "cloudformation", "describe-stacks", "--stack-name", name, "--query", "Stacks[0].StackStatus",
+                 "--output", "text", check=False)
+    if status.returncode == 0 and status.stdout.strip() == "ROLLBACK_COMPLETE":
+        # A stack whose first create failed cannot be updated, only deleted.
+        print(f"stack {name}: deleting the failed first attempt", flush=True)
+        aws("cloudformation", "delete-stack", "--stack-name", name)
+        aws("cloudformation", "wait", "stack-delete-complete", "--stack-name", name)
     command = ["cloudformation", "deploy", "--stack-name", name, "--template-file", str(HERE / template)]
     command += ["--capabilities", "CAPABILITY_NAMED_IAM", "--no-fail-on-empty-changeset"]
     if parameters:
@@ -131,6 +149,7 @@ def wait_until_healthy(endpoint: str, timeout_s: float = 900) -> str:
 
 
 def deploy(args: argparse.Namespace) -> None:
+    ensure_service_linked_roles()
     base = deploy_stack(BASE_STACK, "base.yml")
     model_uri = upload_model(base["ModelBucketName"], args.model_dir)
     image = push_image(base["ImageRepositoryUri"], args.allow_dirty)
