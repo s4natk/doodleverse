@@ -6,6 +6,8 @@ Draw a sun, a cloud, a tree, a flower, a car, or a cat. A CNN trained on Quick, 
 
 Live at [doodleverse-alpha.vercel.app](https://doodleverse-alpha.vercel.app), with the model served from AWS. [How it is deployed](docs/deploy.md).
 
+![A car being recognized over a world with a sun, rain, blooming flowers, trees, and a cat](docs/figures/app.png)
+
 Sketches are named with a model trained on the [Quick, Draw!](https://github.com/googlecreativelab/quickdraw-dataset) dataset by Google Creative Lab, used under [CC BY 4.0](NOTICE).
 
 ## How it works
@@ -17,8 +19,8 @@ The browser sends strokes, not pixels. A FastAPI service rasterizes them with th
 - Test split, scored once after the model, the gate, and the rasterizer were frozen: 0.950 accuracy and 0.950 macro-F1 over 3,600 drawings. Logistic regression on the same pixels reached 0.831 validation macro-F1.
 - The uncertainty gate answers 86.8% of test drawings without asking, and 0.991 of those answers are right.
 - On 3,000 held-back drawings, strokes through this project's rasterizer score 0.947, against 0.949 for Google's own bitmaps of the same strokes.
-- Warm `/predict`: 2.86 ms p50 on a local server, 24.71 ms p50 to the deployed API from the same laptop.
-- 165 fps with 24 entities in headed Chromium, with the main thread 10.4% busy.
+- Warm `/predict`: 3.10 ms p50 on a local server, 26.18 ms p50 to the deployed API from the same laptop.
+- 165 fps with 24 entities in headed Chromium, with the main thread 9.0% busy.
 
 More in the [model card](docs/model-card.md), [experiments](docs/experiments.md), [benchmarks](docs/benchmark-results.md), and [API](docs/api.md).
 
