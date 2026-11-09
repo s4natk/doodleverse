@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -22,9 +24,11 @@ BASE_STACK = "doodleverse-base"
 SERVICE_STACK = "doodleverse-api"
 
 
-def run(*command: str, stdin: str | None = None, check: bool = True) -> subprocess.CompletedProcess:
+def run(
+    *command: str, stdin: str | None = None, check: bool = True, env: dict | None = None
+) -> subprocess.CompletedProcess:
     completed = subprocess.run(
-        list(command), cwd=ROOT, input=stdin, capture_output=True, encoding="utf-8", errors="replace"
+        list(command), cwd=ROOT, input=stdin, env=env, capture_output=True, encoding="utf-8", errors="replace"
     )
     if check and completed.returncode != 0:
         raise RuntimeError(f"{' '.join(command[:3])} failed:\n{completed.stderr.strip()[-3000:]}")
@@ -99,9 +103,16 @@ def push_image(repository_uri: str, allow_dirty: bool) -> str:
         return image
     print(f"{image}: building", flush=True)
     run("docker", "build", "--file", "infra/inference.Dockerfile", "--tag", image, ".")
-    run("docker", "login", "--username", "AWS", "--password-stdin", registry, stdin=aws("ecr", "get-login-password"))
-    print(f"{image}: pushing", flush=True)
-    run("docker", "push", image)
+    engine = run("docker", "context", "inspect", "--format", "{{.Endpoints.docker.Host}}").stdout.strip()
+    with tempfile.TemporaryDirectory() as config:
+        # An ECR token is longer than Windows Credential Manager will store. An empty helper for this one
+        # registry keeps the login in this throwaway config instead, removed once the push is done.
+        Path(config, "config.json").write_text(json.dumps({"credHelpers": {registry: ""}}), encoding="utf-8")
+        env = {**os.environ, "DOCKER_CONFIG": config, "DOCKER_HOST": engine}
+        token = aws("ecr", "get-login-password")
+        run("docker", "login", "--username", "AWS", "--password-stdin", registry, stdin=token, env=env)
+        print(f"{image}: pushing", flush=True)
+        run("docker", "push", image, env=env)
     return image
 
 
