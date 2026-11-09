@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Doodleverse inference on ECS Express Mode: one Fargate task behind an HTTPS load balancer on a domain AWS
+  provides, reading its model from the base stack's bucket.
+
+Parameters:
+  BaseStack:
+    Type: String
+    Default: doodleverse-base
+  ImageUri:
+    Type: String
+    Description: The inference image, tagged with the commit it was built from.
+  ModelUri:
+    Type: String
+    AllowedPattern: "^s3://[^/]+/models/.+$"
+    Description: The S3 prefix holding sidecar.json and the model file it names.
+  CorsOrigins:
+    Type: String
+    Description: Comma-separated origins the browser may call the API from.
+  Cpu:
+    Type: String
+    Default: "512"
+  Memory:
+    Type: String
+    Default: "1024"
+
+Resources:
+  Service:
+    Type: AWS::ECS::ExpressGatewayService
+    Properties:
+      ServiceName: doodleverse-inference
+      Cpu: !Ref Cpu
+      Memory: !Ref Memory
+      HealthCheckPath: /health
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${BaseStack}-ExecutionRoleArn
+      InfrastructureRoleArn:
+        Fn::ImportValue: !Sub ${BaseStack}-InfrastructureRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${BaseStack}-TaskRoleArn
+      PrimaryContainer:
+        Image: !Ref ImageUri
+        ContainerPort: 8000
+        Environment:
+          - Name: DOODLEVERSE_MODEL_URI
+            Value: !Ref ModelUri
+          - Name: DOODLEVERSE_MODEL_DIR
+            Value: /tmp/model
+          - Name: DOODLEVERSE_CORS_ORIGINS
+            Value: !Ref CorsOrigins
+        AwsLogsConfiguration:
+          LogGroup:
+            Fn::ImportValue: !Sub ${BaseStack}-LogGroupName
+          LogStreamPrefix: inference
+      # One task. A second would double the Fargate bill for traffic this demo does not have.
+      ScalingTarget:
+        MinTaskCount: 1
+        MaxTaskCount: 1
+
+Outputs:
+  Endpoint:
+    Value: !GetAtt Service.Endpoint
+  ServiceArn:
+    Value: !GetAtt Service.ServiceArn

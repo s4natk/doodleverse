@@ -31,6 +31,7 @@ dist/
 next-env.d.ts
 playwright-report/
 test-results/
+.vercel/
 
 # Editor and OS
 .cursor/
