@@ -23,7 +23,11 @@ HERE = Path(__file__).resolve().parent
 BASE_STACK = "doodleverse-base"
 SERVICE_STACK = "doodleverse-api"
 # A new account has none of these until something first creates them, and Express Mode needs all three.
-SERVICE_LINKED = ("ecs.amazonaws.com", "elasticloadbalancing.amazonaws.com", "ecs.application-autoscaling.amazonaws.com")
+SERVICE_LINKED = (
+    "ecs.amazonaws.com",
+    "elasticloadbalancing.amazonaws.com",
+    "ecs.application-autoscaling.amazonaws.com",
+)
 
 
 def run(
