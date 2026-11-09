@@ -1,8 +1,8 @@
 {
   "benchmark": "api",
-  "date": "2026-11-06",
+  "date": "2026-11-09",
   "git": {
-    "commit": "7db24ebadb17be27c01155b4fb6c7ae6eeeea2be",
+    "commit": "fcc0254463e19872b7c7a3ceaa5edd8afc55b457",
     "dirty": false
   },
   "machine": {
@@ -29,6 +29,10 @@
     "version": "gap-1ce366c1a170",
     "parameters": 94118
   },
+  "canvas": {
+    "width": 652,
+    "height": 489
+  },
   "sketches": [
     {
       "name": "sun",
@@ -54,47 +58,47 @@
   "load": {
     "runs": 3,
     "import_s": {
-      "median": 3.127,
+      "median": 3.051,
       "all": [
-        4.633,
-        3.105,
-        3.127
+        3.211,
+        3.051,
+        3.011
       ]
     },
     "load_s": {
-      "median": 0.165,
+      "median": 0.155,
       "all": [
-        0.267,
+        0.155,
         0.165,
-        0.156
+        0.153
       ]
     },
     "first_predict_ms": {
-      "median": 3.137,
+      "median": 2.482,
       "all": [
-        7.702,
-        3.137,
-        2.604
+        2.361,
+        2.906,
+        2.482
       ]
     }
   },
   "local": {
     "server": "uvicorn, one process, 127.0.0.1",
-    "ready_s": 4.058,
-    "load_ms_logged": 3212.0,
+    "ready_s": 4.063,
+    "load_ms_logged": 3141.0,
     "warmup": 30,
     "requests": 300,
     "round_trip_ms": {
-      "p50": 3.052,
-      "p95": 4.091,
-      "mean": 3.179,
-      "max": 4.736
+      "p50": 2.858,
+      "p95": 3.473,
+      "mean": 3.005,
+      "max": 11.189
     },
     "predictor_ms": {
-      "p50": 1.886,
-      "p95": 2.448,
-      "mean": 1.996,
-      "max": 2.997
+      "p50": 1.811,
+      "p95": 2.29,
+      "mean": 1.902,
+      "max": 3.025
     }
   },
   "container": {
@@ -108,29 +112,48 @@
     },
     "image": {
       "name": "doodleverse-inference",
-      "disk_usage_bytes": 2380000000,
-      "content_bytes": 467722877
+      "disk_usage_bytes": 2440000000,
+      "content_bytes": 485128860
     },
-    "ready_s": 3.78,
-    "load_ms_logged": 2177.0,
+    "ready_s": 5.007,
+    "load_ms_logged": 3184.0,
     "warmup": 30,
     "requests": 300,
     "round_trip_ms": {
-      "p50": 4.492,
-      "p95": 5.375,
-      "mean": 4.608,
-      "max": 7.424
+      "p50": 4.149,
+      "p95": 4.733,
+      "mean": 4.264,
+      "max": 5.272
     },
     "predictor_ms": {
-      "p50": 2.55,
-      "p95": 3.021,
-      "mean": 2.635,
-      "max": 4.828
+      "p50": 2.421,
+      "p95": 2.821,
+      "mean": 2.49,
+      "max": 3.054
     },
     "memory_bytes": {
-      "after_start": 232469299,
-      "after_requests": 233517875,
-      "cgroup_peak": 250814464
+      "after_start": 248093082,
+      "after_requests": 240333619,
+      "cgroup_peak": 730324992
+    }
+  },
+  "remote": {
+    "url": "https://do-9dc5f019ec4b438da6034795dff16196.ecs.us-east-2.on.aws",
+    "server": "ECS Express Mode in us-east-2: one Fargate task, 512 CPU units (half a vCPU) and 1024 MiB",
+    "model_version": "gap-1ce366c1a170",
+    "warmup": 30,
+    "requests": 300,
+    "round_trip_ms": {
+      "p50": 24.711,
+      "p95": 25.547,
+      "mean": 24.847,
+      "max": 27.388
+    },
+    "predictor_ms": {
+      "p50": 3.418,
+      "p95": 4.057,
+      "mean": 3.546,
+      "max": 5.421
     }
   }
 }

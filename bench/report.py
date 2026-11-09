@@ -87,7 +87,8 @@ def api_section(api: dict) -> list[str]:
             f"The container ran under Docker {engine['docker']} on {engine['os']} (kernel {engine['kernel']}), in a "
             f"VM with {engine['cpus']} CPUs and {engine['memory_gib']} GiB. It used {_mib(memory['after_start'])} "
             f"after starting and {_mib(memory['after_requests'])} after the requests, as `docker stats` counts it. "
-            f"The cgroup's high-water mark, page cache included, was {_mib(memory['cgroup_peak'])}. The image is "
+            f"The cgroup's high-water mark was {_mib(memory['cgroup_peak'])}; that one counts page cache, such as "
+            "TensorFlow's libraries read from the image, which the kernel can reclaim. The image is "
             f"{image['disk_usage_bytes'] / 1e9:.2f} GB on disk"
             + (f" and {image['content_bytes'] / 1e6:,.0f} MB compressed." if image["content_bytes"] else ".")
         ]
@@ -134,8 +135,8 @@ def fps_section(fps: dict) -> list[str]:
     if abs(full["fps"] - empty["fps"]) <= 0.01 * empty["fps"]:
         lines += [
             "",
-            f"Both runs hold {empty['fps']:.0f} fps, the rate this display fires frames at with nothing to draw, so "
-            "frame rate alone cannot show what the world costs. The main thread's busy share can: "
+            f"Both runs hold {empty['fps']:.0f} fps, as many frames as the browser gave even the empty world, so frame "
+            "rate alone cannot show what the world costs. The main thread's busy share can: "
             f"{empty['main_thread_busy']:.1%} for the empty world, {full['main_thread_busy']:.1%} with "
             f"{full['entities']} entities.",
         ]

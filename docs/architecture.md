@@ -27,4 +27,4 @@ One PixiJS ticker runs the world. Each frame hands its elapsed time to a fixed-t
 
 A quick pencil tap that lands on a cloud goes to the world instead of drawing a dot. Removing an entity destroys its display objects and its physics body. Tearing the scene down also removes the ticker callback, the shared glow texture, the sky gradients, the reduced-motion listener, and the Matter collision callback. With reduced motion requested, nothing pulses, bobs, sways, drifts, drives, or walks. Trees still grow and flowers still open.
 
-A frozen model is `model.keras` plus `sidecar.json`. The sidecar holds the label order, the input contract, the rasterizer settings, and the gate thresholds, so whatever serves the model reads them from there instead of repeating them.
+A frozen model is `model.keras` plus `sidecar.json`. The sidecar holds the label order, the input contract, the rasterizer settings, and the gate thresholds, so whatever serves the model reads them from there instead of repeating them. The deployed service copies the same two files from a versioned S3 prefix once at startup ([deploy.md](deploy.md)).

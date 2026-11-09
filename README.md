@@ -2,9 +2,32 @@
 
 Draw it. Bring it to life.
 
-Draw an object and watch it take a place in a small animated world.
+Draw a sun, a cloud, a tree, a flower, a car, or a cat. A CNN trained on Quick, Draw! names it, you confirm, and it joins a small animated world: suns light it, a tapped cloud rains, trees and flowers grow in the rain, cars drive and bump, and cats wander and run from cars.
+
+Live at [doodleverse-alpha.vercel.app](https://doodleverse-alpha.vercel.app), with the model served from AWS. [How it is deployed](docs/deploy.md).
 
 Sketches are named with a model trained on the [Quick, Draw!](https://github.com/googlecreativelab/quickdraw-dataset) dataset by Google Creative Lab, used under [CC BY 4.0](NOTICE).
+
+## How it works
+
+The browser sends strokes, not pixels. A FastAPI service rasterizes them with the same 28×28 contract the model was trained on, runs the TensorFlow CNN, and returns the class, its score, the top three, the model version, and an uncertainty flag. A confident answer is confirmed with one tap. An uncertain one is never chosen for you. The world, PixiJS with Matter.js for the cars, runs in the browser. [Architecture](docs/architecture.md).
+
+## Results
+
+- Test split, scored once after the model, the gate, and the rasterizer were frozen: 0.950 accuracy and 0.950 macro-F1 over 3,600 drawings. Logistic regression on the same pixels reached 0.831 validation macro-F1.
+- The uncertainty gate answers 86.8% of test drawings without asking, and 0.991 of those answers are right.
+- On 3,000 held-back drawings, strokes through this project's rasterizer score 0.947, against 0.949 for Google's own bitmaps of the same strokes.
+- Warm `/predict`: 2.86 ms p50 on a local server, 24.71 ms p50 to the deployed API from the same laptop.
+- 165 fps with 24 entities in headed Chromium, with the main thread 10.4% busy.
+
+More in the [model card](docs/model-card.md), [experiments](docs/experiments.md), [benchmarks](docs/benchmark-results.md), and [API](docs/api.md).
+
+## Limitations
+
+- Six classes. A drawing of anything else still gets one of the six.
+- The model learned from Google's renders of the drawings. The rasterizer gap was measured on Google's simplified strokes, not on live pointer input.
+- One training run, one seed, one split. Scores are softmax outputs, not calibrated probabilities.
+- Latency and frame rate come from one laptop (Ryzen 9 7945HX, RTX 4080 Laptop GPU) and will differ elsewhere.
 
 ## Run it
 
@@ -18,6 +41,7 @@ python -m doodleverse.training.select_cnn   # train the narrow CNN, keep one
 python -m doodleverse.training.analyze      # validation mistakes and the uncertainty gate
 python -m doodleverse.training.skew         # score held-out strokes through the rasterizer
 python -m doodleverse.training.export       # artifacts/model: model.keras and sidecar.json
+python -m doodleverse.training.model_card   # docs/model-card.md from the export and the runs
 uvicorn doodleverse_api.main:app            # serve artifacts/model on :8000
 pytest
 ```
@@ -42,8 +66,11 @@ Benchmarks write JSON to [bench/results](bench/results), with the machine and ve
 ```bash
 python -m bench.api --container   # model load, warm /predict p50 and p95, container memory and image size
 cd apps/web && npm run bench      # frame rate in headed Chromium, empty and with 24 entities
+python -m bench.report            # docs/benchmark-results.md
 ```
+
+The AWS and Vercel deploy is [infra/aws](infra/aws), with the runbook in [docs/deploy.md](docs/deploy.md).
 
 [CI](.github/workflows/ci.yml) runs ruff, pytest, the typecheck, ESLint, Vitest, Playwright against a mocked `/predict`, and both image builds. It does not train.
 
-Results are in [docs/experiments.md](docs/experiments.md). The test split has been scored once, and [ml/splits/v1.test-scored.json](ml/splits/v1.test-scored.json) keeps it that way. The service contract is in [docs/api.md](docs/api.md).
+The test split has been scored once, and [ml/splits/v1.test-scored.json](ml/splits/v1.test-scored.json) keeps it that way.

@@ -90,6 +90,6 @@ Each prediction logs one line: label, score, the uncertain flag, stroke and poin
 
 `infra/inference.Dockerfile` installs the package with the `serve` extra and `requirements.lock` as constraints: FastAPI, uvicorn, Pydantic, headless OpenCV, and TensorFlow. MLflow, matplotlib, and scikit-learn stay out, and a test fails if the serving path imports any of them. On Linux x86_64 TensorFlow comes as `tensorflow-cpu`, the same build without the CUDA kernels. The image has no model in it and runs as an unprivileged user.
 
-`docker image ls` reports 2.39 GB for the image, against 4.58 GB when it installed every dependency, the full `tensorflow` wheel, and `libgl1`, which headless OpenCV does not need.
+`docker image ls` reported 2.39 GB for the image, against 4.58 GB when it installed every dependency, the full `tensorflow` wheel, and `libgl1`, which headless OpenCV does not need. Adding boto3, for copying the model from S3, took it to 2.44 GB; the current size is in [benchmark-results.md](benchmark-results.md).
 
 Compose mounts `artifacts/model` read-only at `/models/doodleverse`, keeps the container filesystem read-only apart from a `/tmp` tmpfs, and health-checks `GET /health`. The web service starts once that check passes.

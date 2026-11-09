@@ -73,7 +73,7 @@ def test_the_numbers_land_in_their_rows(api, fps):
     assert "| local uvicorn, one process | 3.05 ms | 4.09 ms | 1.89 ms | 2.45 ms |" in page
     assert "| deployed | 3.05 ms |" in page
     assert "Fargate, half a vCPU" in page
-    assert "222 MiB after starting" in page and "high-water mark, page cache included, was not read" in page
+    assert "222 MiB after starting" in page and "high-water mark was not read" in page
     assert "| 24: 4 of each class, 4 raining clouds, 7 physics bodies | 164.9 |" in page
     assert "Both runs hold 165 fps" in page and "10.4% with 24 entities" in page
 
