@@ -12,6 +12,8 @@ LOCAL_ORIGINS = ("http://localhost:3000", "http://127.0.0.1:3000")
 @dataclass(frozen=True)
 class Settings:
     model_dir: Path = Path("artifacts/model")
+    # An s3:// prefix holding sidecar.json and the model it names. When set, both are copied into model_dir first.
+    model_uri: str | None = None
     cors_origins: tuple[str, ...] = LOCAL_ORIGINS
     # 4,096 points at full float precision come to about 170 KB of JSON.
     max_body_bytes: int = 256 * 1024
@@ -23,6 +25,7 @@ class Settings:
         origins = os.environ.get("DOODLEVERSE_CORS_ORIGINS")
         return cls(
             model_dir=Path(os.environ.get("DOODLEVERSE_MODEL_DIR", str(cls.model_dir))),
+            model_uri=os.environ.get("DOODLEVERSE_MODEL_URI") or None,
             cors_origins=tuple(item.strip() for item in origins.split(",") if item.strip())
             if origins
             else LOCAL_ORIGINS,

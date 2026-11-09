@@ -71,9 +71,12 @@ The 422 limits are the ones `doodleverse.preprocess.validate` enforces, so the s
 | variable | default |
 | --- | --- |
 | `DOODLEVERSE_MODEL_DIR` | `artifacts/model` |
+| `DOODLEVERSE_MODEL_URI` | unset |
 | `DOODLEVERSE_CORS_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` |
 | `DOODLEVERSE_MAX_BODY_BYTES` | `262144` |
 | `DOODLEVERSE_PREDICT_TIMEOUT_S` | `2.0` |
+
+`DOODLEVERSE_MODEL_URI` is an `s3://bucket/prefix` holding `sidecar.json` and the model file it names. When it is set, the service copies both into `DOODLEVERSE_MODEL_DIR` at startup, then loads and checks them as it would a local export. The deployed service reads its model this way.
 
 ## Behavior
 

@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 
 from doodleverse_api.errors import error_response, install_handlers
 from doodleverse_api.limits import BodySizeLimit
+from doodleverse_api.model_store import fetch_model
 from doodleverse_api.predictor import Predictor
 from doodleverse_api.schemas import Health, PredictRequest, PredictResponse
 from doodleverse_api.settings import Settings
@@ -31,18 +32,24 @@ def _configure_logging() -> None:
     logger.setLevel(logging.INFO)
 
 
-def create_app(settings: Settings | None = None, load: Callable[[Path], Predictor] = Predictor) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    load: Callable[[Path], Predictor] = Predictor,
+    fetch: Callable[[str, Path], Path] = fetch_model,
+) -> FastAPI:
     settings = settings or Settings.from_env()
     _configure_logging()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         started = time.perf_counter()
-        app.state.predictor = load(settings.model_dir)
+        model_dir = fetch(settings.model_uri, settings.model_dir) if settings.model_uri else settings.model_dir
+        app.state.predictor = load(model_dir)
         app.state.limiter = anyio.CapacityLimiter(settings.max_concurrent_predictions)
         logger.info(
-            "model loaded version=%s load_ms=%.0f",
+            "model loaded version=%s from=%s load_ms=%.0f",
             app.state.predictor.version,
+            settings.model_uri or model_dir,
             (time.perf_counter() - started) * 1000,
         )
         yield
