@@ -97,13 +97,11 @@ export type World = {
   entities: Entity[];
   sunlight: number;
   nextId: number;
-  /** 1 for full motion, 0 when the person asked for reduced motion: nothing pulses, sways, bobs, or travels. */
-  motion: number;
   traffic: Traffic;
 };
 
 export function createWorld(): World {
-  return { entities: [], sunlight: 0, nextId: 1, motion: 1, traffic: createTraffic(STEP) };
+  return { entities: [], sunlight: 0, nextId: 1, traffic: createTraffic(STEP) };
 }
 
 export function easeOutCubic(t: number): number {
@@ -153,7 +151,7 @@ export function tapCloud(world: World, x: number, y: number): Entity | null {
     if (cloud.label !== "cloud" || cloud.age <= SPAWN_SECONDS) {
       continue;
     }
-    const now = pose(cloud, world.motion);
+    const now = pose(cloud);
     const halfWidth = (cloud.drawing.width * now.scale) / 2 + TAP_SLOP;
     const halfHeight = (cloud.drawing.height * now.scale) / 2 + TAP_SLOP;
     if (Math.abs(x - now.x) <= halfWidth && Math.abs(y - now.y) <= halfHeight) {
@@ -238,7 +236,7 @@ function surroundings(world: World): Surroundings {
   const cars = world.entities
     .filter((entity) => entity.label === "car" && world.traffic.cars.has(entity.id))
     .map((car) => ({ x: car.x, y: car.y }));
-  return { trees, cars, motion: world.motion };
+  return { trees, cars };
 }
 
 export function step(world: World, dt = STEP): void {
@@ -253,7 +251,7 @@ export function step(world: World, dt = STEP): void {
       continue;
     }
     if (entity.drift !== 0) {
-      entity.x = wrap(entity, entity.x + entity.drift * world.motion * dt);
+      entity.x = wrap(entity, entity.x + entity.drift * dt);
     }
     if (entity.label === "tree" || entity.label === "flower") {
       grow(world, entity, dt);
@@ -282,7 +280,7 @@ function drive(world: World, dt: number): void {
   if (world.traffic.cars.size === 0) {
     return;
   }
-  stepTraffic(world.traffic, dt, world.motion);
+  stepTraffic(world.traffic, dt);
   for (const entity of world.entities) {
     const car = world.traffic.cars.get(entity.id);
     if (car) {
@@ -295,18 +293,18 @@ function drive(world: World, dt: number): void {
   }
 }
 
-/** The pose after settling, `t` world seconds in. `motion` scales every repeating movement. */
-function settledPose(entity: Entity, t: number, motion: number): Pose {
+/** The pose after settling, `t` world seconds in. */
+function settledPose(entity: Entity, t: number): Pose {
   const { rest, phase } = entity;
   const mirror = entity.facing === entity.startFacing ? 1 : -1;
   const base: Pose = { x: rest.x, y: rest.y, scale: rest.scale, rotation: 0, mirror, glow: 0, bloom: 0, settled: 1 };
   switch (entity.label) {
     case "sun": {
-      const wave = motion * Math.sin((2 * Math.PI * t) / SUN_PERIOD_SECONDS + phase);
+      const wave = Math.sin((2 * Math.PI * t) / SUN_PERIOD_SECONDS + phase);
       return { ...base, scale: rest.scale * (1 + SUN_PULSE * wave), glow: SUN_GLOW + SUN_GLOW_PULSE * wave };
     }
     case "cloud": {
-      const bob = CLOUD_BOB * motion * Math.sin((2 * Math.PI * t) / CLOUD_BOB_SECONDS + phase);
+      const bob = CLOUD_BOB * Math.sin((2 * Math.PI * t) / CLOUD_BOB_SECONDS + phase);
       return { ...base, x: entity.x, y: rest.y + bob };
     }
     case "tree": {
@@ -317,7 +315,7 @@ function settledPose(entity: Entity, t: number, motion: number): Pose {
     case "flower": {
       const size = BUD + (1 - BUD) * easeOutCubic(entity.growth);
       const swell = 1 + BLOOM_SWELL * easeOutCubic(entity.bloom);
-      const rotation = FLOWER_SWAY * motion * Math.sin((2 * Math.PI * t) / FLOWER_SWAY_SECONDS + phase);
+      const rotation = FLOWER_SWAY * Math.sin((2 * Math.PI * t) / FLOWER_SWAY_SECONDS + phase);
       return { ...base, scale: rest.scale * size * swell, rotation, bloom: entity.bloom };
     }
     case "car":
@@ -325,17 +323,17 @@ function settledPose(entity: Entity, t: number, motion: number): Pose {
     case "cat": {
       const cat = entity.cat!;
       const moving = cat.mood === "idle" ? 0 : 1;
-      const rotation = 0.05 * motion * moving * Math.sin(t * 9 + phase);
-      return { ...base, x: entity.x, y: entity.y - hopHeight(cat, motion), rotation };
+      const rotation = 0.05 * moving * Math.sin(t * 9 + phase);
+      return { ...base, x: entity.x, y: entity.y - hopHeight(cat), rotation };
     }
     default:
-      return { ...base, rotation: SWAY * motion * Math.sin((2 * Math.PI * t) / SWAY_SECONDS + phase) };
+      return { ...base, rotation: SWAY * Math.sin((2 * Math.PI * t) / SWAY_SECONDS + phase) };
   }
 }
 
-export function pose(entity: Entity, motion = 1): Pose {
+export function pose(entity: Entity): Pose {
   const settled = Math.min(1, entity.age / SPAWN_SECONDS);
-  const resting = settledPose(entity, Math.max(0, entity.age - SPAWN_SECONDS), motion);
+  const resting = settledPose(entity, Math.max(0, entity.age - SPAWN_SECONDS));
   if (settled >= 1) {
     return resting;
   }

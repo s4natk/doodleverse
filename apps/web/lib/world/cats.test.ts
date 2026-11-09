@@ -95,15 +95,6 @@ describe("cat", () => {
     expect(startled).toBe(false);
   });
 
-  it("stays put with reduced motion", () => {
-    const world = createWorld();
-    world.motion = 0;
-    const cat = settledCat(world, 300);
-    const start = [cat.x, cat.y];
-    run(world, 20);
-    expect([cat.x, cat.y]).toEqual(start);
-  });
-
   it("steers straight when nothing is in the way", () => {
     const { vx, vy } = steer({ x: 0, y: 640 }, { x: 100, y: 640 }, 50, []);
     expect([vx, vy]).toEqual([50, 0]);

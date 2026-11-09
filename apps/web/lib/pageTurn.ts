@@ -1,17 +1,12 @@
 export type TurnDirection = "forward" | "back";
 
-/** Whether page turns and draw-ins run. The layout's script decides before paint. */
-export function motionAllowed(): boolean {
-  return document.documentElement.classList.contains("motion-ok");
-}
-
 /**
  * Turn the current page away like a sheet of paper, hinged on the left edge going forward and on the right going
  * back. The sheet is pinned where it is on screen first, so a scrolled page turns from where the visitor sees it.
  */
 export function turnPage(direction: TurnDirection): Promise<void> {
   const sheet = document.getElementById("sheet");
-  if (!sheet || !motionAllowed()) {
+  if (!sheet) {
     return Promise.resolve();
   }
   const scrolled = window.scrollY;

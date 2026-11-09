@@ -28,7 +28,6 @@ export type WorldStats = {
   bodies: number;
   tickerListeners: number;
   physicsListeners: number;
-  motionListeners: number;
   raining: number;
   clouds: { x: number; y: number; raining: boolean; settled: boolean }[];
 };
@@ -61,7 +60,6 @@ const EMPTY_STATS: WorldStats = {
   bodies: 0,
   tickerListeners: 0,
   physicsListeners: 0,
-  motionListeners: 0,
   raining: 0,
   clouds: [],
 };
@@ -186,7 +184,7 @@ function drawRain(graphics: Graphics, world: World, time: number): void {
     if (!span) {
       continue;
     }
-    const now = pose(cloud, world.motion);
+    const now = pose(cloud);
     const top = now.y + (cloud.drawing.height * now.scale) / 4;
     const fall = GROUND_Y + 20 - top;
     const drops = Math.max(4, Math.round((span[1] - span[0]) / DROP_SPACING));
@@ -205,8 +203,7 @@ function drawRain(graphics: Graphics, world: World, time: number): void {
 
 /**
  * One Pixi app and one ticker for the whole world. Removing entities destroys their display objects;
- * `destroy` also releases the shared textures, the gradients, the ticker callback, the motion listener,
- * and the Matter collision callback.
+ * `destroy` also releases the shared textures, the gradients, the ticker callback, and the Matter collision callback.
  */
 export async function createScene(host: HTMLElement): Promise<Scene> {
   const app = new Application();
@@ -232,26 +229,19 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
   shaded.addChild(rain);
   app.stage.addChild(dusk.graphics, day.graphics, suns, shaded);
   const views = new Map<number, View>();
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  let motionListening = 1;
   let alive = true;
-  const applyMotion = () => {
-    world.motion = reducedMotion.matches ? 0 : 1;
-  };
-  applyMotion();
-  reducedMotion.addEventListener("change", applyMotion);
 
   function sync(): void {
     app.stage.scale.set(app.screen.width / WORLD_WIDTH);
     day.graphics.alpha = world.sunlight;
     shaded.tint = mixColor(SHADE_AT_DUSK, 0xffffff, world.sunlight);
-    drawRain(rain, world, world.motion > 0 ? clock.time : 0);
+    drawRain(rain, world, clock.time);
     for (const entity of world.entities) {
       const view = views.get(entity.id);
       if (!view) {
         continue;
       }
-      const now = pose(entity, world.motion);
+      const now = pose(entity);
       view.root.position.set(now.x, now.y);
       view.root.scale.set(now.scale * now.mirror, now.scale);
       view.root.rotation = now.rotation;
@@ -296,12 +286,11 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       bodies: bodyCount(world.traffic),
       tickerListeners: app.ticker.count,
       physicsListeners: physicsListeners(world.traffic.engine),
-      motionListeners: motionListening,
       raining: world.entities.filter((entity) => entity.raining).length,
       clouds: world.entities
         .filter((entity) => entity.label === "cloud")
         .map((cloud) => {
-          const now = pose(cloud, world.motion);
+          const now = pose(cloud);
           return { x: now.x, y: now.y, raining: cloud.raining, settled: now.settled >= 1 };
         }),
     };
@@ -354,8 +343,6 @@ export async function createScene(host: HTMLElement): Promise<Scene> {
       }
       alive = false;
       app.ticker.remove(tick);
-      reducedMotion.removeEventListener("change", applyMotion);
-      motionListening = 0;
       removeViews();
       clearWorld(world);
       destroyTraffic(world.traffic);

@@ -33,7 +33,6 @@ test("clear and reset return bodies, views, and listeners to the empty world's c
     views: 0,
     bodies: 3,
     physicsListeners: 1,
-    motionListeners: 1,
     raining: 0,
   });
   expect(idle.tickerListeners).toBeGreaterThan(0);
@@ -52,7 +51,6 @@ test("clear and reset return bodies, views, and listeners to the empty world's c
   expect(busy.displayObjects).toBeGreaterThan(idle.displayObjects);
   expect(busy.tickerListeners).toBe(idle.tickerListeners);
   expect(busy.physicsListeners).toBe(idle.physicsListeners);
-  expect(busy.motionListeners).toBe(idle.motionListeners);
 
   await page.getByRole("button", { name: "Clear world" }).click();
   await expect(page.getByText("0 things in the world")).toBeVisible();
@@ -64,7 +62,6 @@ test("clear and reset return bodies, views, and listeners to the empty world's c
     bodies: idle.bodies,
     tickerListeners: idle.tickerListeners,
     physicsListeners: idle.physicsListeners,
-    motionListeners: idle.motionListeners,
     raining: 0,
   });
 
@@ -79,7 +76,6 @@ test("clear and reset return bodies, views, and listeners to the empty world's c
     bodies: idle.bodies,
     tickerListeners: idle.tickerListeners,
     physicsListeners: idle.physicsListeners,
-    motionListeners: idle.motionListeners,
   });
 
   await page.evaluate(() => (window as unknown as { __doodleverseWorld: { destroy(): void } }).__doodleverseWorld.destroy());
@@ -90,7 +86,6 @@ test("clear and reset return bodies, views, and listeners to the empty world's c
     bodies: 0,
     tickerListeners: 0,
     physicsListeners: 0,
-    motionListeners: 0,
     raining: 0,
   });
 });

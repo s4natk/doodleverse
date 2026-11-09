@@ -174,7 +174,6 @@ export type WorldStats = {
   bodies: number;
   tickerListeners: number;
   physicsListeners: number;
-  motionListeners: number;
   raining: number;
   clouds: { x: number; y: number; raining: boolean; settled: boolean }[];
 };

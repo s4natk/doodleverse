@@ -33,7 +33,7 @@ export type CatState = {
 /** A trunk footprint on the ground plane. */
 export type Obstacle = { x: number; y: number; r: number };
 
-export type Surroundings = { trees: Obstacle[]; cars: { x: number; y: number }[]; motion: number };
+export type Surroundings = { trees: Obstacle[]; cars: { x: number; y: number }[] };
 
 type Body = { id: number; x: number; y: number; facing: number };
 
@@ -143,7 +143,7 @@ export function stepCat(cat: CatState, body: Body, around: Surroundings, dt: num
     }
     return;
   }
-  const speed = (cat.mood === "flee" ? CAT_FLEE_SPEED : CAT_WALK_SPEED) * around.motion;
+  const speed = cat.mood === "flee" ? CAT_FLEE_SPEED : CAT_WALK_SPEED;
   const { vx, vy } = steer(body, cat.target, speed, around.trees);
   body.x = clamp(body.x + vx * dt, MARGIN / 2, WORLD_WIDTH - MARGIN / 2);
   body.y = clamp(body.y + vy * dt, PATH_TOP, PATH_BOTTOM);
@@ -161,6 +161,6 @@ export function stepCat(cat: CatState, body: Body, around: Surroundings, dt: num
 }
 
 /** How high a startled cat is off the ground right now. */
-export function hopHeight(cat: CatState, motion: number): number {
-  return cat.hop < 0 ? 0 : CAT_HOP_HEIGHT * motion * Math.sin((Math.PI * cat.hop) / CAT_HOP_SECONDS);
+export function hopHeight(cat: CatState): number {
+  return cat.hop < 0 ? 0 : CAT_HOP_HEIGHT * Math.sin((Math.PI * cat.hop) / CAT_HOP_SECONDS);
 }

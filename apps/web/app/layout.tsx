@@ -10,8 +10,8 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "sw
 const DESCRIPTION =
   "Sketch a sun, a cloud, a tree, a flower, a car, or a cat. A neural network names it, and it comes alive in a small animated world.";
 
-// Runs before paint, so a visitor who asked for reduced motion never sees anything start hidden.
-const MOTION = "if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('motion-ok')";
+// Runs before paint. The animations wait for this class: without JavaScript, a section waiting to be scrolled to would stay hidden.
+const SCRIPTED = "document.documentElement.classList.add('js')";
 
 export const metadata: Metadata = {
   title: "Doodleverse · Draw it. Bring it to life.",
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${bricolage.variable} ${caveat.variable} ${geist.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: MOTION }} />
+        <script dangerouslySetInnerHTML={{ __html: SCRIPTED }} />
       </head>
       <body className="graph-paper min-h-dvh overflow-x-hidden font-sans text-ink antialiased">{children}</body>
     </html>

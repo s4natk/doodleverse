@@ -15,8 +15,6 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: "retain-on-failure",
-    // The world stands still under reduced motion. The tests need it moving whatever the machine prefers.
-    reducedMotion: "no-preference",
     viewport: { width: 1280, height: 900 },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } } }],

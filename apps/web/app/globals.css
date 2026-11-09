@@ -29,12 +29,6 @@ html {
   scroll-padding-top: 5rem;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-}
-
 @utility graph-paper {
   background-color: var(--color-paper);
   background-image:
@@ -104,41 +98,41 @@ html {
   min-height: 100dvh;
 }
 
-/* Everything below runs only when the visitor has not asked for reduced motion. A tiny script adds the class. */
+/* Everything below runs whatever the system's motion setting, once the layout's script has added the class. */
 
-.motion-ok .sheet {
+.js .sheet {
   animation: sheet-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   transform-origin: 0 40vh;
 }
 
-.motion-ok .draw {
+.js .draw {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   animation: draw var(--t, 0.8s) cubic-bezier(0.65, 0, 0.35, 1) var(--d, 0s) forwards;
 }
 
-.motion-ok .ink-write {
+.js .ink-write {
   clip-path: inset(-0.25em 100% -0.25em 0);
   animation: ink-write var(--t, 0.7s) cubic-bezier(0.6, 0, 0.3, 1) var(--d, 0s) forwards;
 }
 
-.motion-ok .pop {
+.js .pop {
   opacity: 0;
   scale: 0.9;
   animation: pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) var(--d, 0s) forwards;
 }
 
-.motion-ok .fade {
+.js .fade {
   opacity: 0;
   animation: fade 0.6s ease var(--d, 0s) forwards;
 }
 
-.motion-ok .highlight {
+.js .highlight {
   background-size: 0% 44%;
   animation: highlight-in 0.6s ease var(--d, 0.6s) forwards;
 }
 
-.motion-ok [data-reveal]:not([data-shown]) :is(.draw, .ink-write, .pop, .fade, .highlight) {
+.js [data-reveal]:not([data-shown]) :is(.draw, .ink-write, .pop, .fade, .highlight) {
   animation-play-state: paused;
 }
 

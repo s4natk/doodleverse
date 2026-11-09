@@ -103,9 +103,9 @@ export function destroyTraffic(traffic: Traffic): void {
 }
 
 /** Hold every car at its cruising speed, then let Matter move them and sort out the bumps. */
-export function stepTraffic(traffic: Traffic, step: number, motion: number): void {
+export function stepTraffic(traffic: Traffic, step: number): void {
   for (const car of traffic.cars.values()) {
-    Body.setVelocity(car.body, { x: car.facing * car.speed * motion * step, y: car.body.velocity.y });
+    Body.setVelocity(car.body, { x: car.facing * car.speed * step, y: car.body.velocity.y });
   }
   Engine.update(traffic.engine, step * 1000);
 }
