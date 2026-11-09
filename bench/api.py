@@ -2,6 +2,7 @@
 
     python -m bench.api                # artifacts/model behind a local uvicorn
     python -m bench.api --container    # then the inference service from infra/docker-compose.yml as well
+    python -m bench.api --url URL      # and a service that is already running somewhere, such as the deployed one
 
 Writes bench/results/api.json with the machine and versions beside the numbers. Requests go one at a time.
 """
@@ -354,6 +355,16 @@ def run_container(warmup: int, requests: int) -> dict:
     }
 
 
+def run_remote(url: str, warmup: int, requests: int, note: str | None) -> dict:
+    """A service someone else started. Its round trip includes the network between here and there."""
+
+    import httpx
+
+    url = url.rstrip("/")
+    info = httpx.get(f"{url}/model/info", timeout=10.0).raise_for_status().json()
+    return {"url": url, "server": note, "model_version": info["model_version"], **warm_latency(url, warmup, requests)}
+
+
 def summary(results: dict) -> str:
     model, load, local = results["model"], results["load"], results["local"]
     lines = [
@@ -365,10 +376,13 @@ def summary(results: dict) -> str:
     runs = [("local", local)]
     if results["container"]:
         runs.append(("container", results["container"]))
+    if results.get("remote"):
+        runs.append(("remote", results["remote"]))
     for name, run in runs:
         trip, inside = run["round_trip_ms"], run["predictor_ms"]
+        ready = f"ready in {run['ready_s']:.1f} s; " if "ready_s" in run else ""
         lines.append(
-            f"{name:10s} ready in {run['ready_s']:.1f} s; {run['requests']} requests: round trip "
+            f"{name:10s} {ready}{run['requests']} requests: round trip "
             f"p50 {trip['p50']:.2f} ms, p95 {trip['p95']:.2f} ms; predictor p50 {inside['p50']:.2f} ms, "
             f"p95 {inside['p95']:.2f} ms"
         )
@@ -395,6 +409,8 @@ def main() -> None:
     parser.add_argument("--warmup", type=int, default=30)
     parser.add_argument("--load-runs", type=int, default=3)
     parser.add_argument("--container", action="store_true", help="also measure the Compose inference service")
+    parser.add_argument("--url", help="also measure a service already running at this base URL")
+    parser.add_argument("--url-note", help="what and where that service runs on, recorded with its numbers")
     parser.add_argument("--out", type=Path, default=RESULTS_DIR / "api.json")
     parser.add_argument("--probe-load", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
@@ -408,6 +424,7 @@ def main() -> None:
         "machine": machine(),
         "versions": versions(*DISTRIBUTIONS),
         "model": model_files(args.model_dir),
+        "canvas": CANVAS,
         "sketches": [
             {"name": name, "strokes": len(strokes), "points": sum(len(stroke) for stroke in strokes)}
             for name, strokes in SKETCHES.items()
@@ -415,6 +432,7 @@ def main() -> None:
         "load": cold_loads(args.model_dir, args.load_runs),
         "local": run_local(args.model_dir, args.warmup, args.requests),
         "container": run_container(args.warmup, args.requests) if args.container else None,
+        "remote": run_remote(args.url, args.warmup, args.requests, args.url_note) if args.url else None,
     }
     write_results(args.out, results)
     print(summary(results))
