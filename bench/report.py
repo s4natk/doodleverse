@@ -39,7 +39,7 @@ def _measured(results: dict) -> str:
     machine, git = results["machine"], results["git"]
     commit = f"commit `{git['commit'][:7]}`" + (" with uncommitted changes" if git["dirty"] else "")
     return (
-        f"Measured {results['date']} at {commit} on {machine['cpu']}, {machine['logical_cpus']} logical CPUs, "
+        f"Measured at {commit} on {machine['cpu']}, {machine['logical_cpus']} logical CPUs, "
         f"{machine['memory_gib']} GiB, {machine['os']}"
     )
 

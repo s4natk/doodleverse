@@ -9,7 +9,6 @@ LATENCY = {"round_trip_ms": {"p50": 3.05, "p95": 4.09}, "predictor_ms": {"p50": 
 @pytest.fixture
 def api():
     return {
-        "date": "2026-11-09",
         "git": {"commit": "abcdef1234567", "dirty": False},
         "machine": MACHINE,
         "versions": {"python": "3.12.3", "tensorflow": "2.21.0", "fastapi": "0.146.0"},
@@ -38,7 +37,6 @@ def api():
 def fps():
     frame = {"p50": 6.1, "p95": 6.2, "max": 6.5}
     return {
-        "date": "2026-11-06",
         "git": {"commit": "7db24eb000000", "dirty": False},
         "machine": MACHINE,
         "browser": {"name": "chromium", "version": "156", "headless": False, "gpu": "Test GPU", "renderer": "webgl"},
@@ -63,7 +61,7 @@ def fps():
 def test_every_table_names_where_it_was_measured(api, fps):
     page = report(api, fps)
     assert page.count("on Test CPU, 8 logical CPUs, 16.0 GiB, Windows-11") == 2
-    assert "Measured 2026-11-09 at commit `abcdef1`" in page
+    assert "Measured at commit `abcdef1`" in page
     assert "python 3.12.3, tensorflow 2.21.0, fastapi 0.146.0" in page
     assert "Headed chromium 156 on Test GPU" in page
 

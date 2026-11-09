@@ -133,11 +133,6 @@ function installed(name: string): string {
   return JSON.parse(readFileSync(path.join(WEB, "node_modules", name, "package.json"), "utf8")).version;
 }
 
-function localDate(): string {
-  const now = new Date();
-  return [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((part) => String(part).padStart(2, "0")).join("-");
-}
-
 test("frames per second, empty and with four of each class", async ({ page, browser, browserName }) => {
   await page.goto("/");
   await page.waitForFunction(() => window.__doodleverseWorld !== undefined);
@@ -186,7 +181,6 @@ test("frames per second, empty and with four of each class", async ({ page, brow
   const cpus = os.cpus();
   const results = {
     benchmark: "fps",
-    date: localDate(),
     git: {
       commit: git("rev-parse", "HEAD"),
       dirty: git("status", "--porcelain", "--", ":/", ":(top,exclude)bench/results").length > 0,

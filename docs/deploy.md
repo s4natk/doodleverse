@@ -1,6 +1,6 @@
 # Deploy
 
-Live since November 9, 2026:
+Live:
 
 - Web: [doodleverse-alpha.vercel.app](https://doodleverse-alpha.vercel.app)
 - API: [do-9dc5f019ec4b438da6034795dff16196.ecs.us-east-2.on.aws](https://do-9dc5f019ec4b438da6034795dff16196.ecs.us-east-2.on.aws/health)
@@ -15,7 +15,7 @@ A sun drawn on the live site with a real mouse came back from that API as `sun`,
 | API | ECS Express Mode service `doodleverse-inference`, us-east-2 | Fargate, 512 CPU units (half a vCPU), 1024 MiB, one task, container port 8000 |
 | health check | the Express Mode load balancer | `GET /health`, HTTPS on the domain AWS assigns, with its ACM certificate |
 | model | `s3://doodleverse-models-<account id>-us-east-2/models/gap-1ce366c1a170/` | versioned, private, TLS only, SSE-S3 |
-| image | ECR `doodleverse-inference:8fad913ccd64` | tags are commits and cannot be overwritten; scanned on push; the five newest kept |
+| image | ECR `doodleverse-inference`, tagged with the commit it was built from | tags cannot be overwritten; scanned on push; the five newest kept; the stack's `ImageUri` parameter names the one running |
 | logs | CloudWatch `/doodleverse/inference` | 14 days |
 
 The model objects are `sidecar.json` (version `2dh.BAIEhbCXm9ZF8ttfd3IFXrLZLr3q`) and `model.keras` (version `526y.U6J9xGrQd.veHeERscQ4.yPbdNw`, 433,944 bytes). At startup the task copies both into `/tmp/model` because `DOODLEVERSE_MODEL_URI` points at that prefix, then checks the model's SHA-256 against the sidecar before it answers anything. Its first start logged `load_ms=7793`: importing TensorFlow, the copy from S3, and loading, on half a vCPU.

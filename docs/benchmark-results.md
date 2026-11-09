@@ -4,7 +4,7 @@ Written by `python -m bench.report` from [bench/results/api.json](../bench/resul
 
 ## Model and API
 
-Measured 2026-11-09 at commit `fcc0254` on AMD Ryzen 9 7945HX with Radeon Graphics, 32 logical CPUs, 31.7 GiB, Windows-11-10.0.26300-SP0. python 3.12.3, tensorflow 2.21.0, keras 3.15.1, numpy 2.5.4, opencv-python-headless 4.14.0.94, fastapi 0.146.0, uvicorn 0.54.0.
+Measured at commit `fcc0254` on AMD Ryzen 9 7945HX with Radeon Graphics, 32 logical CPUs, 31.7 GiB, Windows-11-10.0.26300-SP0. python 3.12.3, tensorflow 2.21.0, keras 3.15.1, numpy 2.5.4, opencv-python-headless 4.14.0.94, fastapi 0.146.0, uvicorn 0.54.0.
 
 - Model file: `artifacts/model/model.keras`, 433,944 bytes (424 KB), 94,118 parameters, version `gap-1ce366c1a170`.
 - Cold start, median of 3 fresh processes: 3.05 s to import TensorFlow and the service, 0.15 s to load and check the model, 2.5 ms for the first prediction.
@@ -24,7 +24,7 @@ Deployed means ECS Express Mode in us-east-2: one Fargate task, 512 CPU units (h
 
 ## Browser frame rate
 
-Measured 2026-11-06 at commit `7db24eb` on AMD Ryzen 9 7945HX with Radeon Graphics, 32 logical CPUs, 31.7 GiB, Windows 11 Home 10.0.26300. Headed chromium 156.0.8078.4 on ANGLE (NVIDIA, NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0) Direct3D11 vs_5_0 ps_5_0, D3D11), Pixi's webgl renderer, a 1280×900 viewport at device pixel ratio 1, a 652×489 world canvas. node 24.22.0, next 16.4.2, react 19.3.1, pixi.js 8.22.0, matter-js 0.20.0, @playwright/test 1.64.1.
+Measured at commit `7db24eb` on AMD Ryzen 9 7945HX with Radeon Graphics, 32 logical CPUs, 31.7 GiB, Windows 11 Home 10.0.26300. Headed chromium 156.0.8078.4 on ANGLE (NVIDIA, NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0) Direct3D11 vs_5_0 ps_5_0, D3D11), Pixi's webgl renderer, a 1280×900 viewport at device pixel ratio 1, a 652×489 world canvas. node 24.22.0, next 16.4.2, react 19.3.1, pixi.js 8.22.0, matter-js 0.20.0, @playwright/test 1.64.1.
 
 3 s to settle, then 10 s of requestAnimationFrame timestamps. Entities are spawned through the scene, not drawn, and every cloud is raining.
 

@@ -20,7 +20,6 @@ import sys
 import tempfile
 import time
 from collections.abc import Callable
-from datetime import date
 from pathlib import Path
 
 from bench.machine import RESULTS_DIR, ROOT, git_state, machine, versions, write_results
@@ -419,7 +418,6 @@ def main() -> None:
         return
     results = {
         "benchmark": "api",
-        "date": date.today().isoformat(),
         "git": git_state(),
         "machine": machine(),
         "versions": versions(*DISTRIBUTIONS),
