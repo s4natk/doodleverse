@@ -1,8 +1,51 @@
 @import "tailwindcss";
 
-body {
-  margin: 0;
-  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-  background: #f3e6d4;
-  color: #2c2733;
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #fffaf3;
+  --color-ink: #1f1a24;
+  --color-muted: #6f6674;
+  --color-line: #efe2d2;
+  --color-coral: #ec6a4c;
+  --color-sun: #f2a33a;
+  --color-sky: #5f93d6;
+  --color-leaf: #4f8a49;
+  --color-blossom: #d0558f;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.page-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42rem 30rem at 6% -4%, rgb(255 212 186 / 0.6), transparent 70%),
+    radial-gradient(38rem 28rem at 98% 8%, rgb(204 233 214 / 0.6), transparent 70%),
+    radial-gradient(48rem 32rem at 72% 104%, rgb(212 227 250 / 0.7), transparent 70%),
+    radial-gradient(circle at 1px 1px, rgb(31 26 36 / 0.06) 1px, transparent 0) 0 0 / 28px 28px,
+    var(--color-paper);
+}
+
+@utility text-gradient {
+  background: linear-gradient(100deg, var(--color-coral), var(--color-sun) 62%, #f6c45c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-gradient-warm {
+  background: linear-gradient(100deg, var(--color-coral), #f08a3f 55%, var(--color-sun));
 }
