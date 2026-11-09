@@ -63,12 +63,21 @@ export async function serve(page: Page, reply: (body: unknown, index: number) =>
   return received;
 }
 
-/** Draw strokes on the sketch layer with the real mouse, in canvas pixels. One move per point. */
-export async function draw(page: Page, strokes: Stroke[]): Promise<void> {
-  const box = await page.getByLabel("Drawing area").boundingBox();
+/** The drawing area's box with all of it on screen. A mouse event outside the viewport never reaches the canvas. */
+export async function drawingArea(page: Page): Promise<{ x: number; y: number; width: number; height: number }> {
+  const area = page.getByLabel("Drawing area");
+  // Instant, not the page's smooth scroll: a box read mid-scroll would put the strokes in the wrong place.
+  await area.evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
+  const box = await area.boundingBox();
   if (!box) {
     throw new Error("The drawing area is not on screen.");
   }
+  return box;
+}
+
+/** Draw strokes on the sketch layer with the real mouse, in canvas pixels. One move per point. */
+export async function draw(page: Page, strokes: Stroke[]): Promise<void> {
+  const box = await drawingArea(page);
   for (const stroke of strokes) {
     const [first, ...rest] = stroke;
     await page.mouse.move(box.x + first[0], box.y + first[1]);
@@ -82,10 +91,7 @@ export async function draw(page: Page, strokes: Stroke[]): Promise<void> {
 
 /** A quick click on the sketch layer, in canvas pixels. */
 export async function tap(page: Page, [x, y]: Point): Promise<void> {
-  const box = await page.getByLabel("Drawing area").boundingBox();
-  if (!box) {
-    throw new Error("The drawing area is not on screen.");
-  }
+  const box = await drawingArea(page);
   await page.mouse.click(box.x + x, box.y + y);
 }
 
@@ -174,9 +180,6 @@ export async function worldStats(page: Page): Promise<WorldStats> {
 
 /** A click at a world-space point, through the sketch layer that sits over it. */
 export async function tapWorld(page: Page, [x, y]: Point): Promise<void> {
-  const box = await page.getByLabel("Drawing area").boundingBox();
-  if (!box) {
-    throw new Error("The drawing area is not on screen.");
-  }
+  const box = await drawingArea(page);
   await page.mouse.click(box.x + (x / WORLD_WIDTH) * box.width, box.y + (y / WORLD_HEIGHT) * box.height);
 }

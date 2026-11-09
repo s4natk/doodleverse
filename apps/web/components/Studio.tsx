@@ -72,9 +72,10 @@ export function Studio() {
     return () => controller.abort();
   }, [flow, recognize]);
 
+  // On a phone the panel comes straight after the canvas, so Recognize is under the drawing; from lg it is a column.
   return (
-    <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_300px]">
-      <div className="flex flex-col gap-3">
+    <div className="grid gap-3 rounded-[28px] border border-line bg-white/60 p-3 shadow-[0_40px_90px_-50px_rgba(90,50,20,0.45)] backdrop-blur-sm sm:p-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[auto_auto_1fr] lg:gap-x-4">
+      <div className="min-w-0 lg:col-start-1 lg:row-start-1">
         <Toolbar
           tool={tool}
           width={width}
@@ -86,8 +87,9 @@ export function Studio() {
           onUndo={() => onSketch({ type: "undo" })}
           onClear={() => onSketch({ type: "clear" })}
         />
-        {/* The sketch layer sits exactly over the world, so a confirmed drawing settles from where it was drawn. */}
-        <div className="relative aspect-[4/3] w-full">
+      </div>
+      {/* The sketch layer sits exactly over the world, so a confirmed drawing settles from where it was drawn. */}
+      <div className="relative aspect-[4/3] w-full min-w-0 overflow-hidden rounded-2xl shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] lg:col-start-1 lg:row-start-2">
           <div className="absolute inset-0">
             <World
               ref={worldRef}
@@ -110,8 +112,21 @@ export function Studio() {
               onTap={(point) => (canvasSize ? (worldRef.current?.tap(point, canvasSize) ?? false) : false)}
             />
           </div>
-          <FirstUsePrompt step={state.firstUse} />
-        </div>
+        <FirstUsePrompt step={state.firstUse} />
+      </div>
+      <div className="flex lg:col-start-2 lg:row-span-3 lg:row-start-1">
+        <RecognizePanel
+          flow={flow}
+          canRecognize={canvasSize !== null && canRecognize(state)}
+          mocked={mocked}
+          onRecognize={() => canvasSize && dispatch({ type: "recognize", canvas: canvasSize })}
+          onConfirm={() => dispatch({ type: "confirm" })}
+          onPick={(label) => dispatch({ type: "pick", label })}
+          onRetry={() => dispatch({ type: "retry" })}
+          onRevise={() => dispatch({ type: "revise" })}
+        />
+      </div>
+      <div className="min-w-0 lg:col-start-1 lg:row-start-3">
         <WorldControls
           paused={paused}
           speed={speed}
@@ -128,16 +143,6 @@ export function Studio() {
           }}
         />
       </div>
-      <RecognizePanel
-        flow={flow}
-        canRecognize={canvasSize !== null && canRecognize(state)}
-        mocked={mocked}
-        onRecognize={() => canvasSize && dispatch({ type: "recognize", canvas: canvasSize })}
-        onConfirm={() => dispatch({ type: "confirm" })}
-        onPick={(label) => dispatch({ type: "pick", label })}
-        onRetry={() => dispatch({ type: "retry" })}
-        onRevise={() => dispatch({ type: "revise" })}
-      />
     </div>
   );
 }
