@@ -1,18 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-outfit), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-caveat), "Segoe Print", cursive;
 
-  --color-paper: #fffaf3;
-  --color-ink: #1f1a24;
-  --color-muted: #6f6674;
-  --color-line: #efe2d2;
-  --color-coral: #ec6a4c;
+  --color-paper: #f4f4ee;
+  --color-sheet: #fcfcf8;
+  --color-ink: #121418;
+  --color-graphite: #5a5f6a;
+  --color-grid: #dfe4ee;
+  --color-marker: #3a57ff;
+  --color-lime: #d6f65a;
+  --color-note: #fff0a3;
+  --color-pink: #ff4f8b;
+  --color-mint: #16c29a;
   --color-sun: #f2a33a;
   --color-sky: #5f93d6;
   --color-leaf: #4f8a49;
   --color-blossom: #d0558f;
+
+  --shadow-ink: 4px 4px 0 0 #121418;
+  --shadow-ink-sm: 2px 2px 0 0 #121418;
 }
 
 html {
@@ -26,26 +35,193 @@ html {
   }
 }
 
-.page-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
+@utility graph-paper {
+  background-color: var(--color-paper);
+  background-image:
+    linear-gradient(var(--color-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  background-position: -1px -1px;
+}
+
+@utility ink-card {
+  background-color: var(--color-sheet);
+  border: 2px solid var(--color-ink);
+  border-radius: 18px;
+  box-shadow: var(--shadow-ink);
+}
+
+@utility btn-ink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 2px solid var(--color-ink);
+  border-radius: 12px;
+  box-shadow: var(--shadow-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+
+  &:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 var(--color-ink);
+  }
+  &:active:not(:disabled) {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 0 var(--color-ink);
+  }
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    box-shadow: none;
+  }
+}
+
+@utility highlight {
+  background-image: linear-gradient(100deg, transparent 0.5%, var(--color-lime) 2.5%, var(--color-lime) 97%, transparent 99.5%);
+  background-repeat: no-repeat;
+  background-size: 100% 44%;
+  background-position: 0 86%;
+  padding: 0 0.1em;
+  margin: 0 -0.1em;
+}
+
+@utility tape {
+  position: absolute;
+  height: 22px;
+  width: 78px;
+  background: rgb(255 240 163 / 0.78);
+  border: 1px solid rgb(18 20 24 / 0.12);
   pointer-events: none;
-  background:
-    radial-gradient(42rem 30rem at 6% -4%, rgb(255 212 186 / 0.6), transparent 70%),
-    radial-gradient(38rem 28rem at 98% 8%, rgb(204 233 214 / 0.6), transparent 70%),
-    radial-gradient(48rem 32rem at 72% 104%, rgb(212 227 250 / 0.7), transparent 70%),
-    radial-gradient(circle at 1px 1px, rgb(31 26 36 / 0.06) 1px, transparent 0) 0 0 / 28px 28px,
-    var(--color-paper);
 }
 
-@utility text-gradient {
-  background: linear-gradient(100deg, var(--color-coral), var(--color-sun) 62%, #f6c45c);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.sheet {
+  position: relative;
+  min-height: 100dvh;
 }
 
-@utility bg-gradient-warm {
-  background: linear-gradient(100deg, var(--color-coral), #f08a3f 55%, var(--color-sun));
+/* Everything below runs only when the visitor has not asked for reduced motion. A tiny script adds the class. */
+
+.motion-ok .sheet {
+  animation: sheet-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transform-origin: 0 40vh;
+}
+
+.motion-ok .draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw var(--t, 0.8s) cubic-bezier(0.65, 0, 0.35, 1) var(--d, 0s) forwards;
+}
+
+.motion-ok .ink-write {
+  clip-path: inset(-0.25em 100% -0.25em 0);
+  animation: ink-write var(--t, 0.7s) cubic-bezier(0.6, 0, 0.3, 1) var(--d, 0s) forwards;
+}
+
+.motion-ok .pop {
+  opacity: 0;
+  scale: 0.9;
+  animation: pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) var(--d, 0s) forwards;
+}
+
+.motion-ok .fade {
+  opacity: 0;
+  animation: fade 0.6s ease var(--d, 0s) forwards;
+}
+
+.motion-ok .highlight {
+  background-size: 0% 44%;
+  animation: highlight-in 0.6s ease var(--d, 0.6s) forwards;
+}
+
+.motion-ok [data-reveal]:not([data-shown]) :is(.draw, .ink-write, .pop, .fade, .highlight) {
+  animation-play-state: paused;
+}
+
+.sheet[data-turn] {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  pointer-events: none;
+  box-shadow: 30px 0 80px -30px rgb(18 20 24 / 0.55);
+  animation: page-turn 0.72s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+
+.sheet[data-turn="back"] {
+  animation-name: page-turn-back;
+}
+
+.sheet[data-turn]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgb(18 20 24 / 0) 35%, rgb(18 20 24 / 0.32));
+  opacity: 0;
+  animation: fade 0.72s ease-in forwards;
+}
+
+.sheet[data-turn="back"]::after {
+  background: linear-gradient(270deg, rgb(18 20 24 / 0) 35%, rgb(18 20 24 / 0.32));
+}
+
+@keyframes sheet-in {
+  from {
+    transform: perspective(2400px) rotateY(9deg);
+    opacity: 0.35;
+  }
+}
+
+@keyframes page-turn {
+  from {
+    transform: perspective(2400px) rotateY(0deg);
+  }
+  to {
+    transform: perspective(2400px) rotateY(-104deg);
+  }
+}
+
+@keyframes page-turn-back {
+  from {
+    transform: perspective(2400px) rotateY(0deg);
+  }
+  to {
+    transform: perspective(2400px) rotateY(104deg);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ink-write {
+  to {
+    clip-path: inset(-0.25em 0 -0.25em 0);
+  }
+}
+
+@keyframes pop {
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes highlight-in {
+  to {
+    background-size: 100% 44%;
+  }
 }
