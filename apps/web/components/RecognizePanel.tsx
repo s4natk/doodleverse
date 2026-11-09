@@ -2,6 +2,7 @@
 
 import { LABELS, type Label } from "../lib/contract";
 import type { Prediction } from "../lib/inference";
+import { at } from "../lib/motion";
 import type { Flow } from "../lib/studio";
 import { LabelIcon, SparkIcon } from "./icons";
 import { LABEL_COLOR } from "./labelColors";
@@ -17,15 +18,13 @@ type Props = {
   onRevise: () => void;
 };
 
-const PRIMARY =
-  "flex w-full items-center justify-center gap-2 rounded-full bg-gradient-warm px-5 py-3 font-display text-base " +
-  "font-semibold text-white shadow-[0_12px_26px_-12px_rgba(236,106,76,0.9)] transition hover:brightness-105 " +
-  "active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none";
-const QUIET = "self-start rounded-full px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-black/5 hover:text-ink";
+const PRIMARY = "btn-ink w-full bg-marker px-5 py-3 text-base text-white";
+const QUIET =
+  "self-start text-sm font-semibold text-graphite decoration-marker decoration-2 underline-offset-4 hover:text-ink hover:underline";
 const CHOICE =
-  "flex items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-sm transition " +
-  "hover:border-coral/40 hover:bg-[#fff5f1]";
-const EYEBROW = "text-xs font-medium uppercase tracking-[0.14em] text-muted";
+  "flex items-center gap-2 rounded-lg border-2 border-ink/15 bg-sheet px-3 py-2 text-sm font-medium transition " +
+  "hover:border-ink hover:bg-lime";
+const HAND = "font-hand text-xl leading-none text-graphite";
 
 function Spinner() {
   return (
@@ -42,12 +41,12 @@ function TopThree({ prediction, onPick }: { prediction: Prediction; onPick: (lab
       {prediction.top3.map((guess) => (
         <li key={guess.label}>
           <button type="button" className={`${CHOICE} w-full text-left`} onClick={() => onPick(guess.label)}>
-            <LabelIcon label={guess.label} className={LABEL_COLOR[guess.label]} />
+            <LabelIcon label={guess.label} className={LABEL_COLOR[guess.label]} strokeWidth={2.2} />
             <span className="w-14 capitalize">{guess.label}</span>
-            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/[0.06]">
-              <span className="block h-full rounded-full bg-gradient-warm" style={{ width: `${guess.score * 100}%` }} />
+            <span className="h-2 flex-1 overflow-hidden rounded-full border border-ink/20 bg-paper">
+              <span className="block h-full rounded-full bg-marker" style={{ width: `${guess.score * 100}%` }} />
             </span>
-            <span className="w-10 text-right text-xs tabular-nums text-muted">{guess.score.toFixed(2)}</span>
+            <span className="w-10 text-right text-xs tabular-nums text-graphite">{guess.score.toFixed(2)}</span>
           </button>
         </li>
       ))}
@@ -58,16 +57,11 @@ function TopThree({ prediction, onPick }: { prediction: Prediction; onPick: (lab
 function AllSix({ onPick }: { onPick: (label: Label) => void }) {
   return (
     <div>
-      <p className={`${EYEBROW} mb-2`}>Something else?</p>
+      <p className={`${HAND} mb-2`}>something else?</p>
       <div className="grid grid-cols-3 gap-1.5">
         {LABELS.map((label) => (
-          <button
-            key={label}
-            type="button"
-            className={`${CHOICE} justify-center px-2 capitalize`}
-            onClick={() => onPick(label)}
-          >
-            <LabelIcon label={label} className={LABEL_COLOR[label]} width={16} height={16} />
+          <button key={label} type="button" className={`${CHOICE} justify-center px-2 capitalize`} onClick={() => onPick(label)}>
+            <LabelIcon label={label} className={LABEL_COLOR[label]} width={16} height={16} strokeWidth={2.2} />
             {label}
           </button>
         ))}
@@ -78,9 +72,9 @@ function AllSix({ onPick }: { onPick: (label: Label) => void }) {
 
 function Answered({ prediction }: { prediction: Prediction }) {
   return (
-    <p className="text-xs text-muted">
-      Answered by <span className="font-mono">{prediction.modelVersion}</span> in{" "}
-      {prediction.latencyMs.toFixed(1)} ms on the server. Scores are not probabilities.
+    <p className="text-xs text-graphite">
+      Answered by <span className="font-mono">{prediction.modelVersion}</span> in {prediction.latencyMs.toFixed(1)}{" "}
+      ms on the server. Scores are not probabilities.
     </p>
   );
 }
@@ -94,12 +88,12 @@ export function RecognizePanel({ flow, canRecognize, mocked, onRecognize, onConf
 
   return (
     <section
-      className="flex w-full flex-col gap-4 rounded-2xl border border-line bg-white/85 p-5 shadow-[0_1px_0_rgba(0,0,0,0.03)]"
+      className="flex w-full flex-col gap-4 rounded-[14px] border-2 border-ink bg-sheet p-5 shadow-ink-sm"
       aria-live="polite"
       aria-busy={flow.kind === "recognizing"}
     >
       {mocked ? (
-        <p className="self-start rounded-full bg-coral/10 px-2.5 py-0.5 text-xs font-medium text-coral">
+        <p className="self-start rounded-full border-2 border-ink bg-pink px-2.5 py-0.5 text-xs font-bold text-white">
           Mock recognizer
         </p>
       ) : null}
@@ -107,16 +101,16 @@ export function RecognizePanel({ flow, canRecognize, mocked, onRecognize, onConf
       {flow.kind === "drawing" || flow.kind === "recognizing" ? (
         <>
           <div>
-            <h2 className="font-display text-2xl font-semibold tracking-tight">What did you draw?</h2>
-            <p className="mt-1 text-sm text-muted">Finish one drawing, then ask. It knows these six:</p>
+            <h2 className="font-display text-2xl font-extrabold tracking-tight">What did you draw?</h2>
+            <p className="mt-1 text-sm text-graphite">Finish one drawing, then ask. It knows these six:</p>
           </div>
           <ul className="grid grid-cols-3 gap-1.5" aria-label="What it knows">
             {LABELS.map((label) => (
               <li
                 key={label}
-                className="flex items-center gap-1.5 rounded-xl bg-black/[0.035] px-2.5 py-2 text-sm capitalize text-ink/80"
+                className="flex items-center gap-1.5 rounded-lg border-2 border-ink/10 bg-paper px-2.5 py-2 text-sm font-medium capitalize"
               >
-                <LabelIcon label={label} className={LABEL_COLOR[label]} width={16} height={16} />
+                <LabelIcon label={label} className={LABEL_COLOR[label]} width={16} height={16} strokeWidth={2.2} />
                 {label}
               </li>
             ))}
@@ -125,26 +119,30 @@ export function RecognizePanel({ flow, canRecognize, mocked, onRecognize, onConf
             {flow.kind === "recognizing" ? <Spinner /> : <SparkIcon />}
             {flow.kind === "recognizing" ? "Recognizing…" : "Recognize"}
           </button>
-          <p className="text-xs text-muted">Ctrl+Z or ⌘Z undoes the last stroke.</p>
+          <p className={HAND}>ctrl+z or ⌘z takes back a stroke</p>
         </>
       ) : null}
 
       {flow.kind === "suggested" ? (
         <>
-          <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-[#fff0ea] to-[#fff6e6] p-4">
-            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-white shadow-sm">
+          <div className="flex -rotate-1 items-center gap-4 rounded-xl border-2 border-ink bg-note p-4 shadow-ink-sm">
+            <span className="grid size-14 shrink-0 place-items-center rounded-xl border-2 border-ink bg-sheet">
               <LabelIcon
                 label={flow.prediction.label}
                 className={LABEL_COLOR[flow.prediction.label]}
                 width={32}
                 height={32}
-                strokeWidth={1.6}
+                strokeWidth={2}
               />
             </span>
             <div>
-              <p className={EYEBROW}>Top score {flow.prediction.score.toFixed(2)}</p>
-              <h2 className="font-display text-2xl font-semibold tracking-tight">
-                Looks like a {flow.prediction.label}.
+              <p className={HAND}>top score {flow.prediction.score.toFixed(2)}</p>
+              <h2 className="font-display text-2xl font-extrabold tracking-tight">
+                Looks like a{" "}
+                <span key={flow.prediction.label} className="highlight" style={at(0.1)}>
+                  {flow.prediction.label}
+                </span>
+                .
               </h2>
             </div>
           </div>
@@ -161,8 +159,8 @@ export function RecognizePanel({ flow, canRecognize, mocked, onRecognize, onConf
       {flow.kind === "choosing" ? (
         <>
           <div>
-            <h2 className="font-display text-2xl font-semibold tracking-tight">Not sure. Which one is it?</h2>
-            <p className="mt-1 text-sm text-muted">
+            <h2 className="font-display text-2xl font-extrabold tracking-tight">Not sure. Which one is it?</h2>
+            <p className="mt-1 text-sm text-graphite">
               The top guesses are too close to call, so nothing is picked for you.
             </p>
           </div>
@@ -176,8 +174,8 @@ export function RecognizePanel({ flow, canRecognize, mocked, onRecognize, onConf
       {flow.kind === "failed" ? (
         <>
           <div>
-            <h2 className="font-display text-2xl font-semibold tracking-tight">That didn&apos;t work.</h2>
-            <p className="mt-1 text-sm text-muted">{flow.error.message}</p>
+            <h2 className="font-display text-2xl font-extrabold tracking-tight">That didn&apos;t work.</h2>
+            <p className="mt-1 text-sm text-graphite">{flow.error.message}</p>
           </div>
           <button type="button" className={PRIMARY} onClick={onRetry}>
             Try again

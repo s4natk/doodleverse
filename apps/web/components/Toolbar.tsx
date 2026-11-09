@@ -21,16 +21,17 @@ type Props = {
   onClear: () => void;
 };
 
-const GROUP = "inline-flex items-center gap-0.5 rounded-full bg-black/[0.045] p-1";
-const ACTION =
-  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-black/5 " +
-  "hover:text-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent";
+export const GROUP = "inline-flex items-center gap-0.5 rounded-full border-2 border-ink bg-sheet p-0.5";
+export const ACTION =
+  "inline-flex items-center gap-1.5 rounded-lg border-2 border-transparent px-2.5 py-1 text-sm font-semibold " +
+  "text-graphite transition hover:border-ink hover:bg-lime hover:text-ink disabled:cursor-not-allowed " +
+  "disabled:opacity-35 disabled:hover:border-transparent disabled:hover:bg-transparent";
 
-function segment(on: boolean): string {
+export function segment(on: boolean): string {
   return (
-    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition " +
+    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition " +
     "disabled:cursor-not-allowed disabled:opacity-35 " +
-    (on ? "bg-white text-ink shadow-sm ring-1 ring-black/5" : "text-muted hover:text-ink")
+    (on ? "bg-lime text-ink" : "text-graphite hover:text-ink")
   );
 }
 

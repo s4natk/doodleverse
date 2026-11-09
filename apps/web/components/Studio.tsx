@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { pickRecognizer, RecognizeError, type CanvasSize } from "../lib/inference";
+import { at } from "../lib/motion";
 import { readStep, saveStep } from "../lib/onboarding";
 import type { SketchAction } from "../lib/sketch";
 import { canRecognize, INITIAL_STUDIO, studioReducer } from "../lib/studio";
@@ -74,7 +75,12 @@ export function Studio() {
 
   // On a phone the panel comes straight after the canvas, so Recognize is under the drawing; from lg it is a column.
   return (
-    <div className="grid gap-3 rounded-[28px] border border-line bg-white/60 p-3 shadow-[0_40px_90px_-50px_rgba(90,50,20,0.45)] backdrop-blur-sm sm:p-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[auto_auto_1fr] lg:gap-x-4">
+    <div
+      className="ink-card pop relative grid gap-3 p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_330px] lg:grid-rows-[auto_auto_1fr] lg:gap-x-5"
+      style={at(0.1)}
+    >
+      <span className="tape -top-3.5 left-12 hidden -rotate-6 sm:block" aria-hidden />
+      <span className="tape -top-3.5 right-16 hidden rotate-6 sm:block" aria-hidden />
       <div className="min-w-0 lg:col-start-1 lg:row-start-1">
         <Toolbar
           tool={tool}
@@ -89,7 +95,7 @@ export function Studio() {
         />
       </div>
       {/* The sketch layer sits exactly over the world, so a confirmed drawing settles from where it was drawn. */}
-      <div className="relative aspect-[4/3] w-full min-w-0 overflow-hidden rounded-2xl shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] lg:col-start-1 lg:row-start-2">
+      <div className="relative aspect-[4/3] w-full min-w-0 overflow-hidden rounded-[14px] lg:col-start-1 lg:row-start-2">
           <div className="absolute inset-0">
             <World
               ref={worldRef}
@@ -113,6 +119,23 @@ export function Studio() {
             />
           </div>
         <FirstUsePrompt step={state.firstUse} />
+        {/* Inset by half the stroke, so the frame lands on the box's edge and drawn and finished widths match. */}
+        <svg
+          className="pointer-events-none absolute left-[1.5px] top-[1.5px] z-10 h-[calc(100%-3px)] w-[calc(100%-3px)] overflow-visible"
+          aria-hidden
+        >
+          <rect
+            className="draw"
+            pathLength={1}
+            style={at(0.35, 1.1)}
+            width="100%"
+            height="100%"
+            rx={12.5}
+            fill="none"
+            stroke="#121418"
+            strokeWidth={3}
+          />
+        </svg>
       </div>
       <div className="flex lg:col-start-2 lg:row-span-3 lg:row-start-1">
         <RecognizePanel
